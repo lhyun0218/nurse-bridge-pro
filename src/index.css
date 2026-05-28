@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+/* ════════════════════════════════════════════
+   Nurse-Bridge PRO — Design Tokens
+   HTML 견본 (dashboard.html) 기준 동일 적용
+════════════════════════════════════════════ */
+@theme {
+  /* 색상 */
+  --color-primary:     #2C6E8A;
+  --color-primary-d:   #1E5470;
+  --color-accent:      #4A9BB5;
+  --color-bg:          #F0F4F7;
+  --color-surface:     #FFFFFF;
+  --color-border:      #DDE3E8;
+  --color-text:        #1A2B38;
+  --color-muted:       #6B8090;
+  --color-danger:      #C0392B;
+  --color-warn:        #D4860A;
+  --color-ok:          #2E7D5E;
+  --color-danger-bg:   #FDECEA;
+  --color-warn-bg:     #FEF3E2;
+  --color-ok-bg:       #E8F5EE;
+
+  /* 폰트 */
+  --font-sans: 'Segoe UI', 'Apple SD Gothic Neo', Arial, sans-serif;
+
+  /* 그림자 */
+  --shadow-card: 0 2px 12px rgba(44, 110, 138, 0.09);
+  --shadow-hover: 0 6px 22px rgba(44, 110, 138, 0.14);
+
+  /* 반경 */
+  --radius-card: 10px;
+  --radius-btn:  8px;
+  --radius-badge: 12px;
+
+  /* 사이드바 너비 */
+  --spacing-sidebar: 220px;
+}
+
+/* ── 전역 리셋 ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+}
+
+/* ── 스크롤바 ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-muted); }
