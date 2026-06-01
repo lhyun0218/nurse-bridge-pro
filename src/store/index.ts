@@ -15,5 +15,6 @@ export const store = configureStore({
   },
 })
 
+// verbatimModuleSyntax 환경에서 타입 명시적 export
 export type RootState = ReturnType<typeof store.getState>
 export type AppDispatch = typeof store.dispatch

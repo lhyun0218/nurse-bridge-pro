@@ -22,7 +22,7 @@
   --color-ok-bg:       #E8F5EE;
 
   /* 폰트 */
-  --font-sans: 'Segoe UI', 'Apple SD Gothic Neo', Arial, sans-serif;
+  --font-sans: 'Segoe UI', 'Apple SD Gothic Neo', Arial, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
 
   /* 그림자 */
   --shadow-card: 0 2px 12px rgba(44, 110, 138, 0.09);
@@ -54,11 +54,91 @@ body {
 
 #root {
   min-height: 100vh;
-  display: flex;
 }
 
-/* ── 스크롤바 ── */
+/* ── 사이드바 레이아웃 ── */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #F0F4F7;
+}
+
+.app-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin-left: 220px;
+}
+
+/* 데스크톱: 사이드바 항상 표시 */
+@media (min-width: 768px) {
+  .sidebar-aside {
+    transform: translateX(0) !important;
+  }
+}
+
+/* 모바일: 콘텐츠 margin 없음 */
+@media (max-width: 767px) {
+  .app-content {
+    margin-left: 0;
+  }
+}
+
+/* ── 반응형 유틸리티 ── */
+.mobile-only {
+  display: block;
+}
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+
+.desktop-only {
+  display: flex;
+}
+@media (max-width: 767px) {
+  .desktop-only {
+    display: none !important;
+  }
+}
+
+/* 햄버거 버튼 (모바일만) */
+.hamburger-btn {
+  display: flex;
+}
+@media (min-width: 768px) {
+  .hamburger-btn {
+    display: none !important;
+  }
+}
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--color-bg); }
 ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-muted); }
+
+/* ── 대시보드 반응형 그리드 ── */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.quick-bar {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+@media (max-width: 1100px) {
+  .stat-row  { grid-template-columns: repeat(2, 1fr); }
+  .quick-bar { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 767px) {
+  .stat-row  { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .quick-bar { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+}

@@ -18,6 +18,9 @@ export interface Nurse {
   overtimeHours: number
   workStart: string
   workEnd: string
+  gender?: 'M' | 'F'
+  yearsOfExperience?: number
+  note?: string
 }
 
 // ── 환자 ──────────────────────────────────────
