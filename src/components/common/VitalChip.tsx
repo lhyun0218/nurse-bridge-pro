@@ -14,10 +14,10 @@ const VitalChip: React.FC<VitalChipProps> = ({
   isBorderline = false,
 }) => {
   const valueColor = isAbnormal
-    ? '#C0392B'
+    ? 'var(--color-danger)'
     : isBorderline
-    ? '#D4860A'
-    : '#1A2B38'
+    ? 'var(--color-warn)'
+    : 'var(--color-text)'
 
   return (
     <span
@@ -25,13 +25,14 @@ const VitalChip: React.FC<VitalChipProps> = ({
         display: 'inline-flex',
         alignItems: 'center',
         gap: '4px',
-        backgroundColor: '#F0F4F7',
+        backgroundColor: 'var(--color-bg)',
+        border: '1px solid var(--color-border)',
         borderRadius: '6px',
         padding: '3px 8px',
         fontSize: '11px',
       }}
     >
-      <span style={{ color: '#6B8090' }}>{label}</span>
+      <span style={{ color: 'var(--color-muted)' }}>{label}</span>
       <span style={{ color: valueColor, fontWeight: 600 }}>{value}</span>
     </span>
   )

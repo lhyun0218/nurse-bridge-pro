@@ -6,11 +6,15 @@ import { setPatients } from './store/slices/patientsSlice'
 import { setTasks } from './store/slices/tasksSlice'
 import { setInventory } from './store/slices/inventorySlice'
 import { setNurses } from './store/slices/nursesSlice'
+import { setAssignments } from './store/slices/assignmentsSlice'
+import generateAssignmentsForMonth from './store/thunks/assignmentsThunks'
 import './index.css'
 import App from './App.tsx'
 
 async function enableMocking() {
   if (import.meta.env.DEV) {
+    // 구버전 분리 저장소 키 정리 (nb:persist:v1으로 통합됨)
+    try { localStorage.removeItem('mock:attendances:v1') } catch (e) {}
     const { worker } = await import('./mocks/browser')
     return worker.start({ onUnhandledRequest: 'bypass' })
   }
@@ -35,9 +39,32 @@ async function initializeStore() {
     store.dispatch(setTasks(tasks))
     store.dispatch(setInventory(inventory))
     store.dispatch(setNurses(nurses))
+    try {
+      const aRes = await fetch('/api/assignments')
+      if (aRes.ok) {
+        const a = await aRes.json()
+        // store under today's date key
+        const d = new Date()
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+        store.dispatch(setAssignments({ date: key, assignments: a }))
+      }
+    } catch (e) {
+      console.warn('assignments load failed', e)
+    }
   } catch (err) {
     console.error('초기 데이터 로드 실패:', err)
   }
+    // if there's a saved schedule for this month, pre-generate assignments for the month
+    try {
+      const now = new Date()
+      const key = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+      const savedSchedules = (store.getState() as any).schedule.saved
+      if (savedSchedules && savedSchedules[key]) {
+        store.dispatch(generateAssignmentsForMonth(now.getFullYear(), now.getMonth() + 1, 1) as any)
+      }
+    } catch (e) {
+      console.warn('monthly assignment generation failed', e)
+    }
 }
 
 enableMocking()

@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import { motion } from 'framer-motion'
 import type { VitalSigns } from '../../types'
 
 interface VitalItem {
@@ -11,6 +12,8 @@ interface VitalItem {
 
 interface VitalSignsGridProps {
   vitalSigns: VitalSigns
+  /** 실시간 모니터링 중일 때 true — "실시간" 배지 표시 */
+  isRealtime?: boolean
 }
 
 function getValueColor(isAbnormal?: boolean, isBorderline?: boolean): string {
@@ -19,10 +22,10 @@ function getValueColor(isAbnormal?: boolean, isBorderline?: boolean): string {
   return '#1A2B38'
 }
 
-const VitalSignsGrid: React.FC<VitalSignsGridProps> = ({ vitalSigns: v }) => {
+function buildItems(v: VitalSigns): VitalItem[] {
   const systolic = parseInt(v.bloodPressure.split('/')[0], 10)
 
-  const items: VitalItem[] = [
+  return [
     {
       label: '혈압', value: v.bloodPressure, unit: 'mmHg',
       isAbnormal: systolic > 160,
@@ -64,32 +67,129 @@ const VitalSignsGrid: React.FC<VitalSignsGridProps> = ({ vitalSigns: v }) => {
       isBorderline: v.gcs >= 10 && v.gcs < 13,
     }] : []),
   ]
+}
+
+/** 수치가 변경됐을 때 잠깐 강조 애니메이션을 주는 셀 */
+const VitalCell: React.FC<{ item: VitalItem; animate: boolean }> = ({ item, animate }) => {
+  const color = getValueColor(item.isAbnormal, item.isBorderline)
 
   return (
-    <div
+    <motion.div
       style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: '8px',
+        background: item.isAbnormal ? '#FFF5F5' : 'var(--color-bg)',
+        borderRadius: '10px',
+        padding: '12px 8px',
+        textAlign: 'center',
+        border: item.isAbnormal ? '1px solid #FDECEA' : '1px solid var(--color-border)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '3px',
+        minHeight: '72px',
       }}
+      animate={animate ? { scale: [1, 1.04, 1] } : {}}
+      transition={{ duration: 0.3, ease: 'easeInOut' }}
     >
-      {items.map((item, i) => (
-        <div
-          key={i}
-          style={{
-            background: '#F0F4F7',
-            borderRadius: '8px',
-            padding: '10px',
-            textAlign: 'center',
-          }}
-        >
-          <div style={{ fontSize: '10px', color: '#6B8090', marginBottom: '3px' }}>{item.label}</div>
-          <div style={{ fontSize: '17px', fontWeight: 700, color: getValueColor(item.isAbnormal, item.isBorderline) }}>
-            {item.value}
+      <div style={{ fontSize: '10px', color: 'var(--color-muted)', fontWeight: 600, letterSpacing: '0.3px' }}>
+        {item.label}
+      </div>
+      <div
+        style={{
+          fontSize: '15px',
+          fontWeight: 700,
+          color,
+          lineHeight: 1.3,
+          fontVariantNumeric: 'tabular-nums',
+          fontFeatureSettings: '"tnum"',
+          wordBreak: 'break-all',   // 긴 수치(혈압 등) 줄바꿈 허용
+          overflowWrap: 'anywhere',
+          maxWidth: '100%',
+        }}
+      >
+        {item.value}
+      </div>
+      <div style={{ fontSize: '9px', color: 'var(--color-muted)' }}>{item.unit}</div>
+    </motion.div>
+  )
+}
+
+const VitalSignsGrid: React.FC<VitalSignsGridProps> = ({ vitalSigns: v, isRealtime = false }) => {
+  const items = buildItems(v)
+
+  // 이전 값과 비교해 변경된 항목 추적
+  const prevItemsRef = useRef<VitalItem[]>(items)
+  const [changedKeys, setChangedKeys] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    const prev = prevItemsRef.current
+    const changed = new Set<string>()
+
+    items.forEach((item, i) => {
+      if (prev[i] && String(prev[i].value) !== String(item.value)) {
+        changed.add(item.label)
+      }
+    })
+
+    if (changed.size > 0) {
+      setChangedKeys(changed)
+      // 애니메이션 후 초기화
+      const t = setTimeout(() => setChangedKeys(new Set()), 600)
+      prevItemsRef.current = items
+      return () => clearTimeout(t)
+    }
+
+    prevItemsRef.current = items
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [v])
+
+  return (
+    <div>
+      {/* 타임스탬프 표시 */}
+      {v.lastUpdated && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+          <div style={{ fontSize: 11, color: 'var(--color-muted)' }}>
+            최근: {new Date(v.lastUpdated).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
           </div>
-          <div style={{ fontSize: '10px', color: '#6B8090', marginTop: '2px' }}>{item.unit}</div>
         </div>
-      ))}
+      )}
+      {/* 실시간 배지 */}
+      {isRealtime && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+          <motion.span
+            animate={{ opacity: [1, 0.3, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+            style={{
+              display: 'inline-block',
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: '#2E7D5E',
+              flexShrink: 0,
+            }}
+          />
+          <span style={{ fontSize: '11px', fontWeight: 700, color: '#2E7D5E', letterSpacing: '0.4px' }}>
+            실시간 모니터링
+          </span>
+          <span style={{ fontSize: '10px', color: '#6B8090' }}>· 5초마다 업데이트</span>
+        </div>
+      )}
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '8px',
+        }}
+      >
+        {items.map((item) => (
+          <VitalCell
+            key={item.label}
+            item={item}
+            animate={changedKeys.has(item.label)}
+          />
+        ))}
+      </div>
     </div>
   )
 }

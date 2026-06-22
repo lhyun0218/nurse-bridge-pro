@@ -1,11 +1,16 @@
 import React from 'react'
 import type { Nurse, NursingTask, Patient } from '../../types'
-import { getOvertimeStatus } from '../../utils/overtime'
+import { useAppSelector } from '../../hooks/useAppSelector'
+import type { NurseScheduleRow } from '../../types'
+import { getOvertimeStatus, getMonthlyWorkDays } from '../../utils/overtime'
+import { useAppDispatch } from '../../hooks/useAppDispatch'
+import { approveCheckout, setOnBreak, clearOnBreak } from '../../store/slices/attendanceSlice'
 
 interface NurseStatusTableProps {
   nurses: Nurse[]
   patients: Patient[]
   allTasks: NursingTask[]
+  scheduleRows: NurseScheduleRow[]
 }
 
 const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
@@ -20,25 +25,44 @@ const ROW_HIGHLIGHT: Record<string, string> = {
   danger: 'rgba(192,57,43,.06)',
 }
 
-const NurseStatusTable: React.FC<NurseStatusTableProps> = ({ nurses, patients, allTasks }) => {
+const NurseStatusTable: React.FC<NurseStatusTableProps> = ({ nurses, patients, allTasks, scheduleRows }) => {
   const activeNurses = nurses.filter(n => n.role === 'Nurse')
+  const todayKey = (() => {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  })()
+  const assignsToday = useAppSelector(s => s.assignments.byDate[todayKey] ?? {})
+  const attendance = useAppSelector(s => s.attendance.records)
+  const dispatch = useAppDispatch()
+  const hasSchedule = scheduleRows.length > 0
 
   return (
     <div style={{
       background: '#FFFFFF', borderRadius: '10px',
       boxShadow: '0 2px 12px rgba(44,110,138,.09)', padding: '20px',
     }}>
-      <div style={{
-        fontSize: '11px', fontWeight: 700, color: '#6B8090',
-        textTransform: 'uppercase', letterSpacing: '.6px', marginBottom: '14px',
-      }}>
-        👩‍⚕️ 간호사 현황
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+        <div style={{
+          fontSize: '11px', fontWeight: 700, color: '#6B8090',
+          textTransform: 'uppercase', letterSpacing: '.6px',
+        }}>
+          👩‍⚕️ 간호사 현황
+        </div>
+        {/* 권고 기준 안내 */}
+        <div style={{
+          fontSize: '11px', color: '#6B8090',
+          background: '#F7FAFB', padding: '4px 10px', borderRadius: '8px',
+          border: '1px solid #DDE3E8',
+        }}>
+          📋 월 권고 근무일: <strong style={{ color: '#2C6E8A' }}>22일 이하</strong>
+          <span style={{ marginLeft: '6px', opacity: 0.7 }}>(한국 간호사 적정 근무 기준)</span>
+        </div>
       </div>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
           <thead>
             <tr style={{ background: '#F7FAFB' }}>
-              {['간호사명', '담당 환자', '완료 Todo', '예상 오버타임', '상태'].map(h => (
+              {['간호사명', '담당 환자', '완료 Todo', hasSchedule ? '이번 달 근무일' : '근무표', '상태'].map(h => (
                 <th
                   key={h}
                   style={{
@@ -55,12 +79,13 @@ const NurseStatusTable: React.FC<NurseStatusTableProps> = ({ nurses, patients, a
           </thead>
           <tbody>
             {activeNurses.map(nurse => {
-              const st = getOvertimeStatus(nurse.overtimeHours)
+              const workDays = getMonthlyWorkDays(nurse.id, scheduleRows)
+              const st = hasSchedule ? getOvertimeStatus(workDays) : 'ok'
               const sc = STATUS_STYLE[st]
               const rowBg = ROW_HIGHLIGHT[st]
 
               const nurseTaskIds = patients
-                .filter(p => p.assignedNurseId === nurse.id)
+                .filter(p => Object.values(assignsToday[p.id] ?? {}).includes(nurse.id))
                 .flatMap(p => p.nursingTaskIds)
               const nurseTasks = allTasks.filter(t => nurseTaskIds.includes(t.taskId))
               const nurseCompleted = nurseTasks.filter(t => t.status === 'Completed').length
@@ -90,17 +115,55 @@ const NurseStatusTable: React.FC<NurseStatusTableProps> = ({ nurses, patients, a
                       </span>
                     )}
                   </td>
-                  <td style={{ padding: '12px', fontWeight: nurse.overtimeHours >= 3 ? 700 : 400, color: sc.color }}>
-                    {nurse.overtimeHours}h
+                  <td style={{ padding: '12px', fontWeight: st !== 'ok' ? 700 : 400, color: st !== 'ok' ? sc.color : 'var(--color-text)' }}>
+                    {hasSchedule ? (
+                      <>
+                        {workDays}일
+                        {st !== 'ok' && (
+                          <span style={{ marginLeft: '6px', fontSize: '11px', color: sc.color }}>
+                            (+{workDays - 22}일 초과)
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span style={{ fontSize: '11px', color: '#6B8090' }}>근무표 미생성</span>
+                    )}
                   </td>
                   <td style={{ padding: '12px' }}>
-                    <span style={{
-                      padding: '3px 10px', borderRadius: '12px',
-                      fontSize: '11px', fontWeight: 600,
-                      background: sc.bg, color: sc.color,
-                    }}>
-                      {sc.label}
-                    </span>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <span style={{
+                            padding: '3px 10px', borderRadius: '12px',
+                            fontSize: '11px', fontWeight: 600,
+                            background: sc.bg, color: sc.color,
+                          }}>
+                            {sc.label}
+                          </span>
+                          {/* 출석 상태 */}
+                          {(() => {
+                            const rec = attendance.find(a => a.nurseId === nurse.id && a.date === todayKey)
+                            if (!rec || (!rec.checkIn && !rec.leaveRequested)) return (
+                              <span style={{ fontSize: 11, color: 'var(--color-muted)' }}>미출근</span>
+                            )
+                            return (
+                              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                {rec.checkIn && <span style={{ fontSize: 11, color: 'var(--color-muted)' }}>출근 {new Date(rec.checkIn).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</span>}
+                                {rec.onBreak && <span style={{ fontSize: 11, color: '#D4860A' }}>휴게 중</span>}
+                                {rec.checkoutRequested && !rec.checkoutApproved && (
+                                  <button onClick={() => dispatch(approveCheckout({ nurseId: nurse.id, date: todayKey }))} style={{ padding: '4px 8px', fontSize: 11, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-bg)', cursor: 'pointer' }}>퇴근 승인</button>
+                                )}
+                                {rec.checkoutApproved && <span style={{ fontSize: 11, color: 'var(--color-muted)' }}>퇴근 승인</span>}
+                                {rec.checkOut && <span style={{ fontSize: 11, color: 'var(--color-muted)' }}>퇴근 {new Date(rec.checkOut).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</span>}
+                                {rec.leaveRequested && <span style={{ fontSize: 11, color: '#D4860A' }}>연차신청</span>}
+                                {/* 휴게 토글 버튼 */}
+                                {rec.onBreak ? (
+                                  <button onClick={() => dispatch(clearOnBreak({ nurseId: nurse.id, date: todayKey }))} style={{ padding: '4px 8px', fontSize: 11, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-bg)', cursor: 'pointer' }}>휴게 해제</button>
+                                ) : (
+                                  <button onClick={() => dispatch(setOnBreak({ nurseId: nurse.id, date: todayKey }))} style={{ padding: '4px 8px', fontSize: 11, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-bg)', cursor: 'pointer' }}>휴게 시작</button>
+                                )}
+                              </div>
+                            )
+                          })()}
+                        </div>
                   </td>
                 </tr>
               )

@@ -23,11 +23,25 @@ const tasksSlice = createSlice({
         task.status = task.status === 'Pending' ? 'Completed' : 'Pending'
       }
     },
+    completeTaskById: (state, action: PayloadAction<string>) => {
+      const task = state.allTasks.find(t => t.taskId === action.payload)
+      if (task) {
+        task.status = 'Completed'
+      }
+    },
+    completeMultipleTasks: (state, action: PayloadAction<string[]>) => {
+      action.payload.forEach(taskId => {
+        const task = state.allTasks.find(t => t.taskId === taskId)
+        if (task) {
+          task.status = 'Completed'
+        }
+      })
+    },
     addTask: (state, action: PayloadAction<NursingTask>) => {
       state.allTasks.push(action.payload)
     },
   },
 })
 
-export const { setTasks, toggleTask, addTask } = tasksSlice.actions
+export const { setTasks, toggleTask, completeTaskById, completeMultipleTasks, addTask } = tasksSlice.actions
 export default tasksSlice.reducer

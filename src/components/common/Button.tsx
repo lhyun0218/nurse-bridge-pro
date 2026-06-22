@@ -12,29 +12,29 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, React.CSSProperties> = {
   primary: {
-    backgroundColor: '#2C6E8A',
+    backgroundColor: 'var(--color-primary)',
     color: '#FFFFFF',
     border: 'none',
   },
   outline: {
-    backgroundColor: '#F0F4F7',
-    color: '#1A2B38',
-    border: '1.5px solid #DDE3E8',
+    backgroundColor: 'var(--color-bg)',
+    color: 'var(--color-text)',
+    border: '1.5px solid var(--color-border)',
   },
   danger: {
-    backgroundColor: '#C0392B',
+    backgroundColor: 'var(--color-danger)',
     color: '#FFFFFF',
     border: 'none',
   },
   ghost: {
     backgroundColor: 'transparent',
-    color: '#6B8090',
+    color: 'var(--color-muted)',
     border: 'none',
   },
   done: {
-    backgroundColor: '#E8F5EE',
-    color: '#2E7D5E',
-    border: '1px solid #b8ddc9',
+    backgroundColor: 'var(--color-ok-bg)',
+    color: 'var(--color-ok)',
+    border: '1px solid rgba(46,125,94,0.2)',
   },
 }
 
@@ -93,6 +93,7 @@ const Button: React.FC<ButtonProps> = ({
     transition: 'background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease',
     fontFamily: 'inherit',
     lineHeight: 1.4,
+    boxShadow: 'var(--shadow-card)',
     ...variantStyles[variant],
     ...sizeStyles[size],
     ...style,

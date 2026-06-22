@@ -1,7 +1,4 @@
 import React from 'react'
-import { useAppDispatch } from '../../hooks/useAppDispatch'
-import { useAppSelector } from '../../hooks/useAppSelector'
-import { consumeItem, requestRestock } from '../../store/slices/inventorySlice'
 import type { InventoryItem } from '../../types'
 
 interface InventoryItemCardProps {
@@ -17,21 +14,7 @@ const statusStyle: Record<string, React.CSSProperties> = {
 }
 
 const InventoryItemCard: React.FC<InventoryItemCardProps> = ({ item }) => {
-  const dispatch = useAppDispatch()
-  const currentUser = useAppSelector(s => s.auth.currentUser)
-  const nurseId = currentUser?.id ?? 'unknown'
-
   const barPct = Math.min(100, Math.round((item.quantity / (item.reorderPoint * 2)) * 100))
-  const barColor = borderColor[item.status]
-
-  const handleConsume = (amount: number) => {
-    if (item.quantity <= 0) return
-    dispatch(consumeItem({ itemId: item.itemId, amount, nurseId }))
-  }
-
-  const handleRequest = () => {
-    dispatch(requestRestock(item.itemId))
-  }
 
   return (
     <div
@@ -63,52 +46,25 @@ const InventoryItemCard: React.FC<InventoryItemCardProps> = ({ item }) => {
 
       {/* 재고 바 */}
       <div style={{ height: '6px', background: '#DDE3E8', borderRadius: '3px', overflow: 'hidden', marginBottom: '12px' }}>
-        <div style={{ width: `${barPct}%`, height: '100%', background: barColor, borderRadius: '3px', transition: 'width .3s' }} />
+        <div style={{ width: `${barPct}%`, height: '100%', background: borderColor[item.status], borderRadius: '3px', transition: 'width .3s' }} />
       </div>
 
       {/* 버튼 */}
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {item.status === 'sufficient' && (
-          <>
-            {[1, 5, 10].map(amt => (
-              <button
-                key={amt}
-                onClick={() => handleConsume(amt)}
-                disabled={item.quantity <= 0}
-                style={{
-                  padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600,
-                  border: '1.5px solid #DDE3E8', background: '#F0F4F7', color: '#1A2B38',
-                  cursor: item.quantity <= 0 ? 'not-allowed' : 'pointer', opacity: item.quantity <= 0 ? 0.5 : 1,
-                }}
-              >
-                소비 -{amt}
-              </button>
-            ))}
-          </>
+          <div style={{ fontSize: '12px', color: '#2E7D5E', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ color: '#2E7D5E', fontSize: '14px' }}>✓</span> 자동 관리 중
+          </div>
         )}
         {item.status === 'warning' && (
-          <>
-            <button
-              onClick={() => handleConsume(1)}
-              style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, border: '1.5px solid #DDE3E8', background: '#F0F4F7', color: '#1A2B38', cursor: 'pointer' }}
-            >
-              소비 -1
-            </button>
-            <button
-              onClick={handleRequest}
-              style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, border: 'none', background: '#D4860A', color: '#fff', cursor: 'pointer' }}
-            >
-              📋 청구 요청
-            </button>
-          </>
+          <div style={{ fontSize: '12px', color: '#D4860A', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '14px' }}>⚠️</span> 자동 재고 보충 예정
+          </div>
         )}
         {item.status === 'critical' && (
-          <button
-            onClick={handleRequest}
-            style={{ padding: '7px 14px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, border: 'none', background: '#C0392B', color: '#fff', cursor: 'pointer' }}
-          >
-            🚨 긴급 청구
-          </button>
+          <div style={{ fontSize: '12px', color: '#C0392B', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '14px' }}>🔴</span> 자동 긴급 보충 진행 중
+          </div>
         )}
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { useAppSelector } from '../../hooks/useAppSelector'
 import type { Patient, NursingTask } from '../../types'
 import { SeverityBadge, VitalChip } from '../common'
 
@@ -72,6 +73,12 @@ function isVitalAbnormal(patient: Patient): {
 }
 
 const PatientCard: React.FC<PatientCardProps> = ({ patient, tasks }) => {
+  const todayKey = (() => {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  })()
+  const assignments = useAppSelector(s => s.assignments.byDate[todayKey] ?? {})
+  const nurses = useAppSelector(s => s.nurses.allNurses)
   const navigate = useNavigate()
   const completed = tasks.filter(t => t.status === 'Completed').length
   const total = tasks.length
@@ -87,7 +94,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, tasks }) => {
     <motion.div
       whileHover={{ y: -2, boxShadow: '0 6px 22px rgba(44,110,138,.14)' }}
       style={{
-        background: '#FFFFFF',
+        background: 'var(--color-surface)',
         borderRadius: '10px',
         boxShadow: '0 2px 12px rgba(44,110,138,.09)',
         padding: '16px 18px',
@@ -95,39 +102,80 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, tasks }) => {
         cursor: 'pointer',
         display: 'flex',
         flexDirection: 'column',
+        height: '100%',
+        transition: 'background-color 0.3s ease',
       }}
       onClick={() => navigate(`/patient/${patient.id}`)}
     >
       {/* 상단: 병실번호 + 중증도 배지 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-        <div style={{ fontSize: '11px', color: '#6B8090', fontWeight: 500 }}>
+        <div style={{ fontSize: '11px', color: 'var(--color-muted)', fontWeight: 500 }}>
           병실 {patient.roomNumber} · {patient.id}
         </div>
         <SeverityBadge severity={patient.severity} />
       </div>
 
       {/* 환자명 */}
-      <div style={{ fontSize: '16px', fontWeight: 700, marginBottom: '2px', color: '#1A2B38' }}>
+      <div style={{ fontSize: '16px', fontWeight: 700, marginBottom: '2px', color: 'var(--color-text)' }}>
         {patient.name}
       </div>
 
-      {/* 나이/성별/입원일차 */}
-      <div style={{ fontSize: '12px', color: '#6B8090', marginBottom: '10px' }}>
-        {patient.age}세 · {patient.gender === 'M' ? '남' : '여'} · 입원 {days}일차
+      {/* 담당 간호사 (Day / Evening / Night) */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
+        {['Day', 'Evening', 'Night'].map(shift => {
+          const aid = assignments?.[patient.id]?.[shift as 'Day'|'Evening'|'Night']
+          const nurse = aid ? nurses.find(n => n.id === aid) : undefined
+          return (
+            <div key={shift} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#6B8090' }}>{shift[0]}</div>
+              <div style={{ fontSize: '12px', color: nurse ? 'var(--color-text)' : 'var(--color-muted)', padding: '4px 8px', borderRadius: '999px', border: '1px solid var(--color-border)', background: nurse ? '#F7FBFC' : 'transparent' }}>
+                {nurse ? nurse.name : '미배정'}
+              </div>
+            </div>
+          )
+        })}
       </div>
 
+      {/* 나이/성별/혈액형/입원일차 */}
+      <div style={{ fontSize: '12px', color: 'var(--color-muted)', marginBottom: '6px', display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
+        <span>{patient.age}세</span>
+        <span style={{ color: 'var(--color-border)' }}>·</span>
+        <span>{patient.gender === 'M' ? '남' : '여'}</span>
+        {patient.bloodType && (
+          <>
+            <span style={{ color: 'var(--color-border)' }}>·</span>
+            <span style={{ fontWeight: 700, color: '#3F51B5' }}>{patient.bloodType}형</span>
+          </>
+        )}
+        <span style={{ color: 'var(--color-border)' }}>·</span>
+        <span>입원 {days}일차</span>
+        {patient.codeStatus === 'DNR' && (
+          <span style={{ marginLeft: '4px', fontSize: '10px', fontWeight: 700, padding: '1px 5px', borderRadius: '4px', background: '#3D1A18', color: '#ff6b6b', border: '1px solid #C0392B' }}>DNR</span>
+        )}
+      </div>
+
+      {/* 알레르기 경고 */}
+      {patient.allergies && patient.allergies.length > 0 && (
+        <div style={{ fontSize: '11px', color: '#C0392B', fontWeight: 600, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span>⚠️</span>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            알레르기: {patient.allergies[0]}{patient.allergies.length > 1 ? ` 외 ${patient.allergies.length - 1}건` : ''}
+          </span>
+        </div>
+      )}
+
       {/* 진단 태그 */}
-      <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginBottom: '10px' }}>
+      <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginBottom: '10px', minHeight: '48px', alignContent: 'flex-start', overflow: 'hidden' }}>
         {patient.diagnosis.map((d, i) => (
           <span
             key={i}
             style={{
               padding: '2px 8px',
-              background: '#F0F4F7',
+              background: 'var(--color-bg)',
               borderRadius: '5px',
               fontSize: '11px',
-              color: '#1A2B38',
-              border: '1px solid #DDE3E8',
+              color: 'var(--color-text)',
+              border: '1px solid var(--color-border)',
             }}
           >
             {d}
@@ -135,8 +183,18 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, tasks }) => {
         ))}
       </div>
 
-      {/* 활력징후 칩 */}
-      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
+      {/* 활력징후 칩 — 고정 높이로 레이아웃 shift 방지 */}
+      <div
+        style={{
+          height: '64px',
+          display: 'flex',
+          gap: '5px',
+          flexWrap: 'wrap',
+          alignContent: 'flex-start',
+          marginBottom: '4px',
+          overflow: 'hidden',
+        }}
+      >
         <VitalChip
           label="BP"
           value={v.bloodPressure}
@@ -197,13 +255,22 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, tasks }) => {
         )}
       </div>
 
-      {/* Todo 미니 ProgressBar */}
+      {/* 활력징후 측정 시각 — High는 라이브(자동), 나머지는 수동 측정 시각 표시 */}
+      <div style={{ marginBottom: '12px', fontSize: '10px', color: 'var(--color-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+        {patient.severity === 'High' ? (
+          <span style={{ color: '#C0392B', fontWeight: 600 }}>🔴 라이브 모니터링 중</span>
+        ) : v.lastUpdated ? (
+          <span>📋 수동 측정 · {new Date(v.lastUpdated).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} 기록</span>
+        ) : (
+          <span>📋 수동 측정 필요</span>
+        )}
+      </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
         <div
           style={{
             flex: 1,
             height: '5px',
-            background: '#DDE3E8',
+            background: 'var(--color-border)',
             borderRadius: '3px',
             overflow: 'hidden',
           }}
@@ -221,7 +288,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, tasks }) => {
         <div
           style={{
             fontSize: '11px',
-            color: allDone ? '#2E7D5E' : '#6B8090',
+            color: allDone ? '#2E7D5E' : 'var(--color-muted)',
             whiteSpace: 'nowrap',
           }}
         >
@@ -241,9 +308,9 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, tasks }) => {
               fontWeight: 600,
               cursor: 'pointer',
               textAlign: 'center',
-              background: '#E8F5EE',
-              color: '#2E7D5E',
-              border: '1.5px solid #b8ddc9',
+              background: 'var(--color-ok-bg)',
+              color: 'var(--color-ok)',
+              border: '1.5px solid var(--color-ok)',
             }}
             onClick={e => { e.stopPropagation(); navigate(`/patient/${patient.id}`) }}
           >
@@ -260,9 +327,9 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, tasks }) => {
                 fontWeight: 600,
                 cursor: 'pointer',
                 textAlign: 'center',
-                border: '1.5px solid #DDE3E8',
-                background: '#F0F4F7',
-                color: '#1A2B38',
+                border: '1.5px solid var(--color-border)',
+                background: 'var(--color-bg)',
+                color: 'var(--color-text)',
               }}
               onClick={e => { e.stopPropagation(); navigate(`/patient/${patient.id}`) }}
               onMouseEnter={e => {
@@ -273,9 +340,9 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, tasks }) => {
               }}
               onMouseLeave={e => {
                 const el = e.currentTarget
-                el.style.borderColor = '#DDE3E8'
-                el.style.color = '#1A2B38'
-                el.style.background = '#F0F4F7'
+                el.style.borderColor = 'var(--color-border)'
+                el.style.color = 'var(--color-text)'
+                el.style.background = 'var(--color-bg)'
               }}
             >
               상세 보기
@@ -289,13 +356,13 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, tasks }) => {
                 fontWeight: 600,
                 cursor: 'pointer',
                 textAlign: 'center',
-                background: '#2C6E8A',
+                background: 'var(--color-primary)',
                 color: '#FFFFFF',
                 border: 'none',
               }}
               onClick={e => { e.stopPropagation(); navigate(`/patient/${patient.id}`) }}
               onMouseEnter={e => { e.currentTarget.style.background = '#1E5470' }}
-              onMouseLeave={e => { e.currentTarget.style.background = '#2C6E8A' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-primary)' }}
             >
               Todo 확인
             </button>
