@@ -1,7 +1,9 @@
 import React from 'react'
+import { useAppSelector } from '../../hooks/useAppSelector'
 import type { Patient } from '../../types'
 
 interface AlertChip {
+  id: string
   type: 'danger' | 'warn' | 'info'
   message: string
 }
@@ -10,7 +12,7 @@ interface AlertBannerProps {
   patients: Patient[]
 }
 
-function buildAlerts(patients: Patient[]): AlertChip[] {
+function buildStaticAlerts(patients: Patient[]): AlertChip[] {
   const chips: AlertChip[] = []
 
   for (const p of patients) {
@@ -18,42 +20,42 @@ function buildAlerts(patients: Patient[]): AlertChip[] {
     const room = p.roomNumber
     const name = p.name
 
-    // danger: bloodGlucose > 180
     if (v.bloodGlucose !== undefined && v.bloodGlucose > 180) {
       chips.push({
+        id: `static-${p.id}-glucose`,
         type: 'danger',
         message: `🚨 ${room}호 ${name} — 혈당 비정상 (${v.bloodGlucose})`,
       })
     }
 
-    // danger: oxygenSaturation < 94
     if (v.oxygenSaturation < 94) {
       chips.push({
+        id: `static-${p.id}-spo2`,
         type: 'danger',
         message: `🔴 ${room}호 ${name} — SpO₂ ${v.oxygenSaturation}% 저하`,
       })
     }
 
-    // danger: systolic BP > 160
     const systolic = parseInt(v.bloodPressure.split('/')[0], 10)
     if (!isNaN(systolic) && systolic > 160) {
       chips.push({
+        id: `static-${p.id}-bp`,
         type: 'danger',
         message: `🚨 ${room}호 ${name} — 혈압 위험 (${v.bloodPressure})`,
       })
     }
 
-    // warn: painScore > 6
     if (v.painScore !== undefined && v.painScore > 6) {
       chips.push({
+        id: `static-${p.id}-pain`,
         type: 'warn',
         message: `⚠️ ${room}호 ${name} — 통증 호소 (${v.painScore}/10)`,
       })
     }
 
-    // warn: temperature > 38.0
     if (v.temperature > 38.0) {
       chips.push({
+        id: `static-${p.id}-temp`,
         type: 'warn',
         message: `⚠️ ${room}호 ${name} — 발열 (${v.temperature}°C)`,
       })
@@ -70,15 +72,41 @@ const chipStyles: Record<'danger' | 'warn' | 'info', React.CSSProperties> = {
 }
 
 const AlertBanner: React.FC<AlertBannerProps> = ({ patients }) => {
-  const chips = buildAlerts(patients)
+  // 실시간 활력징후 알림 (Redux)
+  const vitalAlerts      = useAppSelector(s => s.alerts.vitalAlerts)
+  // 투약 타이머 알림 (Redux)
+  const medicationAlerts = useAppSelector(s => s.alerts.medicationAlerts)
+
+  // 정적 알림 (초기 환자 데이터 기반) — 실시간 알림이 없을 때 fallback
+  const staticChips = buildStaticAlerts(patients)
+
+  // 실시간 알림을 AlertChip 형태로 변환
+  const realtimeChips: AlertChip[] = vitalAlerts.map(a => ({
+    id: a.id,
+    type: a.type,
+    message: a.message,
+  }))
+
+  // 투약 타이머 알림을 AlertChip 형태로 변환
+  const medChips: AlertChip[] = medicationAlerts.map(a => ({
+    id: a.id,
+    type: a.type,
+    message: a.message,
+  }))
+
+  // 우선순위: 실시간 활력징후 알림 + 투약 알림 → 없으면 정적 알림
+  const hasRealtime = realtimeChips.length > 0 || medChips.length > 0
+  const chips: AlertChip[] = hasRealtime
+    ? [...realtimeChips, ...medChips]
+    : [...staticChips, ...medChips]
 
   if (chips.length === 0) return null
 
   return (
     <div
       style={{
-        background: '#FFFFFF',
-        borderBottom: '1px solid #DDE3E8',
+        background: 'var(--color-surface)',
+        borderBottom: '1px solid var(--color-border)',
         padding: '8px 24px',
         display: 'flex',
         gap: '8px',
@@ -86,13 +114,14 @@ const AlertBanner: React.FC<AlertBannerProps> = ({ patients }) => {
         overflowX: 'auto',
         flexWrap: 'nowrap',
         WebkitOverflowScrolling: 'touch',
+        transition: 'background-color 0.3s ease, border-color 0.3s ease',
       }}
     >
       <span
         style={{
           fontSize: '11px',
           fontWeight: 700,
-          color: '#6B8090',
+          color: 'var(--color-muted)',
           marginRight: '4px',
           whiteSpace: 'nowrap',
           flexShrink: 0,
@@ -100,9 +129,9 @@ const AlertBanner: React.FC<AlertBannerProps> = ({ patients }) => {
       >
         알림
       </span>
-      {chips.map((chip, i) => (
+      {chips.map((chip) => (
         <span
-          key={i}
+          key={chip.id}
           style={{
             ...chipStyles[chip.type],
             display: 'inline-flex',

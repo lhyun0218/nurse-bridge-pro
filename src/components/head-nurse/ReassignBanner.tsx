@@ -23,8 +23,8 @@ const ReassignBanner: React.FC<ReassignBannerProps> = ({ suggestion, onApply }) 
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '16px 20px',
-            background: 'linear-gradient(135deg, #EBF4F8, #F4F7F9)',
-            border: '1px solid #C5DDE8',
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
             borderRadius: '10px',
             gap: '16px',
             flexWrap: 'wrap',
@@ -39,7 +39,7 @@ const ReassignBanner: React.FC<ReassignBannerProps> = ({ suggestion, onApply }) 
             onMouseLeave={() => setHovered(false)}
             style={{
               padding: '10px 20px',
-              background: hovered ? '#1E5470' : '#2C6E8A',
+              background: hovered ? 'var(--color-primary-d)' : 'var(--color-primary)',
               color: '#fff',
               border: 'none',
               borderRadius: '8px',

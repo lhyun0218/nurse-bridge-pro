@@ -1,6 +1,22 @@
 // ── 역할 ──────────────────────────────────────
 export type UserRole = 'Nurse' | 'HeadNurse' | 'Admin'
 export type ShiftType = 'Day' | 'Evening' | 'Night'
+export type ShiftCode = 'D' | 'E' | 'N' | 'OFF'
+
+export interface NurseScheduleRow {
+  nurseId: string
+  nurseName: string
+  shifts: ShiftCode[]
+  stats: {
+    dayCount: number
+    eveningCount: number
+    nightCount: number
+    offCount: number
+    weekendWork: number
+    overtimeRisk: boolean
+  }
+}
+
 export type Severity = 'High' | 'Medium' | 'Low'
 export type TaskStatus = 'Pending' | 'Completed'
 export type TaskCategory = 'Monitoring' | 'Medication' | 'Hygiene' | 'Documentation'
@@ -30,6 +46,8 @@ export interface VitalSigns {
   temperature: number
   respiratoryRate: number
   oxygenSaturation: number
+  /** 마지막 업데이트 타임스탬프 (Unix ms) */
+  lastUpdated?: number
   bloodGlucose?: number
   painScore?: number
   gcs?: number
@@ -56,6 +74,7 @@ export interface Patient {
   name: string
   age: number
   gender: 'M' | 'F'
+  bloodType?: 'A' | 'B' | 'AB' | 'O' | 'Unknown'
   diagnosis: string[]
   severity: Severity
   vitalSigns: VitalSigns
@@ -66,6 +85,27 @@ export interface Patient {
   admissionDate: string
   assignedNurseId: string
   roomNumber: string
+  // 추가 임상 정보
+  allergies?: string[]
+  height?: number            // cm
+  weight?: number            // kg
+  isolation?: string         // 격리 유형 (예: '접촉격리', '호흡격리')
+  fallRisk?: 'Low' | 'Medium' | 'High'
+  pressureUlcerRisk?: 'Low' | 'Medium' | 'High'
+  diet?: string              // 식이 처방 (예: '당뇨식', '연식')
+  mobility?: 'Ambulatory' | 'Assisted' | 'Bedridden'
+  ivAccess?: string          // 정맥로 (예: '우측 전완 22G PIV')
+  oxygenTherapy?: string     // 산소 투여 (예: 'NC 2L/min')
+  foley?: boolean            // 유도관 여부
+  ngt?: boolean              // L-tube 여부
+  codeStatus?: 'Full' | 'DNR' | 'DNI'
+  guardian?: {
+    name: string
+    relation: string
+    contact: string
+  }
+  attendingPhysician?: string
+  specialNotes?: string[]
 }
 
 // ── 간호 업무 ─────────────────────────────────
@@ -102,14 +142,50 @@ export interface InventoryItem {
 }
 
 // ── 근무 보고 ─────────────────────────────────
+export interface ShiftReportPatientSnapshot {
+  patientId: string
+  patientName: string
+  roomNumber: string
+  severity: Severity
+  diagnosis: string[]
+  completedTaskCount: number
+  pendingTaskCount: number
+  pendingTaskNames: string[]
+  nursingNotesSummary: string[]   // 최근 간호 노트 내용 (최대 3개)
+  vitalSigns?: {
+    bloodPressure?: string
+    heartRate?: number
+    temperature?: number
+    oxygenSaturation?: number
+  }
+}
+
 export interface ShiftReport {
   reportId: string
   shiftDate: string
   shiftType: ShiftType
   nurseId: string
+  nurseName?: string          // 보고서 작성 간호사 이름 (조회 편의)
   completedTaskIds: string[]
   handoffSummary: string
   notes: string
+  writerSignature?: string
+  receiverSignature?: string
+  patientSnapshots?: ShiftReportPatientSnapshot[]  // 담당 환자 상태 스냅샷
+}
+
+// ── 간호 노트 ─────────────────────────────────
+export type NoteCategory = 'general' | 'observation' | 'medication' | 'procedure' | 'education'
+
+export interface NursingNote {
+  id: string
+  patientId: string
+  nurseId: string
+  nurseName: string
+  category: NoteCategory
+  content: string
+  timestamp: number   // Unix ms
+  isPinned?: boolean
 }
 
 // ── Auth 상태 ─────────────────────────────────

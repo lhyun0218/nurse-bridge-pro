@@ -1,4 +1,5 @@
 import React from 'react'
+import { LuCircleAlert, LuTriangleAlert, LuCircleCheck } from 'react-icons/lu'
 
 interface SeverityBadgeProps {
   severity: 'High' | 'Medium' | 'Low'
@@ -6,27 +7,29 @@ interface SeverityBadgeProps {
 }
 
 const config = {
-  High:   { bg: '#FDECEA', color: '#C0392B', label: '🔴 High' },
-  Medium: { bg: '#FEF3E2', color: '#D4860A', label: '🟡 Medium' },
-  Low:    { bg: '#E8F5EE', color: '#2E7D5E', label: '🟢 Low' },
+  High:   { bg: 'var(--color-danger-bg)', color: 'var(--color-danger)', label: 'High',   Icon: LuCircleAlert },
+  Medium: { bg: 'var(--color-warn-bg)',   color: 'var(--color-warn)',   label: 'Medium', Icon: LuTriangleAlert },
+  Low:    { bg: 'var(--color-ok-bg)',     color: 'var(--color-ok)',     label: 'Low',    Icon: LuCircleCheck },
 }
 
 const SeverityBadge: React.FC<SeverityBadgeProps> = ({ severity, size = 'sm' }) => {
-  const { bg, color, label } = config[severity]
+  const { bg, color, label, Icon } = config[severity]
+  const iconSize = size === 'md' ? 13 : 12
+  const fontSize = size === 'md' ? '12px' : '11px'
+  const padding  = size === 'md' ? '4px 10px' : '3px 8px'
 
-  const style: React.CSSProperties = {
-    backgroundColor: bg,
-    color,
-    padding: size === 'md' ? '4px 12px' : '3px 9px',
-    borderRadius: '12px',
-    fontSize: size === 'md' ? '12px' : '11px',
-    fontWeight: 600,
-    display: 'inline-flex',
-    alignItems: 'center',
-    whiteSpace: 'nowrap',
-  }
-
-  return <span style={style}>{label}</span>
+  return (
+    <span style={{
+      backgroundColor: bg, color,
+      padding, borderRadius: '12px',
+      fontSize, fontWeight: 600,
+      display: 'inline-flex', alignItems: 'center', gap: '4px',
+      whiteSpace: 'nowrap',
+    }}>
+      <Icon style={{ width: iconSize, height: iconSize, flexShrink: 0 }} />
+      {label}
+    </span>
+  )
 }
 
 export default SeverityBadge
