@@ -15,7 +15,14 @@ async function enableMocking() {
   // DEV + PROD 모두 MSW 사용 (실제 백엔드 없는 SPA 배포 환경)
   try { localStorage.removeItem('mock:attendances:v1') } catch (e) {}
   const { worker } = await import('./mocks/browser')
-  return worker.start({ onUnhandledRequest: 'bypass' })
+
+  // worker.start()는 SW가 activated되고 MOCK_ACTIVATE 메시지가 왕복할 때까지 기다림
+  await worker.start({
+    onUnhandledRequest: 'bypass',
+    serviceWorker: {
+      url: '/mockServiceWorker.js',
+    },
+  })
 }
 
 // 앱 시작 시 MSW API 호출로 Redux Store 초기화

@@ -71,31 +71,43 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
     const selectedShift = overrideShift ?? shift
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ employeeId: empId, password: pwd }),
-      })
-      const data = await res.json()
-      if (res.ok && data.success) {
-        const profileShift: ShiftType = data.user.shiftType
-        // 프로필 교대와 선택 교대가 다를 때만 확인 모달
-        if (profileShift !== selectedShift) {
-          setPendingUser(data)
-          setModalOpen(true)
-          setLoading(false)
-          return
+
+    // MSW Service Worker가 아직 활성화 중일 수 있으므로 실패 시 자동 재시도
+    const attemptLogin = async (retryCount = 0): Promise<void> => {
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ employeeId: empId, password: pwd }),
+        })
+        const data = await res.json()
+        if (res.ok && data.success) {
+          const profileShift: ShiftType = data.user.shiftType
+          if (profileShift !== selectedShift) {
+            setPendingUser(data)
+            setModalOpen(true)
+            setLoading(false)
+            return
+          }
+          await finalizeLogin(data, selectedShift)
+        } else {
+          setError(data.message ?? '사번 또는 비밀번호가 올바르지 않습니다.')
         }
-        await finalizeLogin(data, selectedShift)
-      } else {
-        setError(data.message ?? '사번 또는 비밀번호가 올바르지 않습니다.')
+      } catch {
+        // fetch 자체가 실패한 경우 — MSW SW가 아직 초기화 중일 가능성
+        if (retryCount < 3) {
+          // 500ms 후 재시도
+          await new Promise(resolve => setTimeout(resolve, 500))
+          return attemptLogin(retryCount + 1)
+        }
+        setError('서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.')
+      } finally {
+        if (retryCount === 0) setLoading(false)
       }
-    } catch {
-      setError('서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.')
-    } finally {
-      setLoading(false)
     }
+
+    await attemptLogin()
+    setLoading(false)
   }
 
   const [modalOpen, setModalOpen] = useState(false)
