@@ -18,6 +18,7 @@ import { setRecords } from './slices/attendanceSlice'
 import scheduleReducer from './slices/scheduleSlice'
 import assignmentsReducer from './slices/assignmentsSlice'
 import coverageReducer from './slices/coverageSlice'
+import prescriptionsReducer from './slices/prescriptionsSlice'
 import type { NursingTask, Nurse, Patient } from '../types'
 
 // ── 투약 완료 자동 재고 차감 미들웨어 ──────────────────────────────────────
@@ -95,6 +96,7 @@ export const store = configureStore({
     schedule: scheduleReducer,
     assignments: assignmentsReducer,
     coverage: coverageReducer,
+    prescriptions: prescriptionsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(medicationAutoConsumeMiddleware),

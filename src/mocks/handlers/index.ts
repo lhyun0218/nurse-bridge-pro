@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw'
-import { mockNurses, mockPatients, mockTasks, mockInventory } from '../../data/mockData'
+import { mockNurses, mockPatients, mockTasks, mockInventory, mockPrescriptions } from '../../data/mockData'
 import { autoAssignPatients } from '../../utils/autoAssignPatients'
 
 // ── Attendance 헬퍼: Redux persist 키('nb:persist:v1')와 동일한 저장소를 사용 ──
@@ -131,5 +131,27 @@ export const handlers = [
     const item = mockInventory.find(i => i.itemId === params.itemId)
     if (!item) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
     return HttpResponse.json({ success: true, message: `${item.itemName} 청구 요청이 전송되었습니다.` })
+  }),
+
+  // ── 처방 ──────────────────────────────────────
+  http.get('/api/prescriptions', ({ request }) => {
+    const params = new URL(request.url).searchParams
+    const patientId = params.get('patientId')
+    const out = patientId
+      ? mockPrescriptions.filter(p => p.patientId === patientId)
+      : mockPrescriptions
+    return HttpResponse.json(out)
+  }),
+  http.patch('/api/prescriptions/:id/verify', ({ params }) => {
+    const rx = mockPrescriptions.find(p => p.id === params.id)
+    if (!rx) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
+    rx.verified = true
+    return HttpResponse.json(rx)
+  }),
+  http.patch('/api/prescriptions/:id/discontinue', ({ params }) => {
+    const rx = mockPrescriptions.find(p => p.id === params.id)
+    if (!rx) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
+    rx.status = 'discontinued'
+    return HttpResponse.json(rx)
   }),
 ]

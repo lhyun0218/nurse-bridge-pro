@@ -1,6 +1,8 @@
 import type { Nurse, Patient, InventoryItem } from '../types'
 export { mockTasks } from './mockTasks'
 import { hydratePatientsWithTaskIds } from './mockTasks'
+import { patientMedications, mockPrescriptions } from './mockMedications'
+export { mockPrescriptions }
 
 export const mockNurses: Nurse[] = [
   // Day nurses
@@ -47,6 +49,9 @@ export const mockPatients: Patient[] = [
 
 // nursingTaskIds를 mockTasks 기반으로 자동 채움
 ;(function() { const hyd = hydratePatientsWithTaskIds(mockPatients); hyd.forEach((p, i) => { mockPatients[i].nursingTaskIds = p.nursingTaskIds }) })()
+
+// 진단별 처방 약물 주입
+mockPatients.forEach(p => { if (patientMedications[p.id]) p.medications = patientMedications[p.id] })
 
 export const mockInventory: InventoryItem[] = [
   { itemId: 'i1', itemName: '주사기 10ml', category: 'Syringe', quantity: 120, reorderPoint: 30, unit: '개', status: 'sufficient', history: [] },

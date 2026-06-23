@@ -7,6 +7,7 @@ import { setTasks } from './store/slices/tasksSlice'
 import { setInventory } from './store/slices/inventorySlice'
 import { setNurses } from './store/slices/nursesSlice'
 import { setAssignments } from './store/slices/assignmentsSlice'
+import { setPrescriptions } from './store/slices/prescriptionsSlice'
 import generateAssignmentsForMonth from './store/thunks/assignmentsThunks'
 import './index.css'
 import App from './App.tsx'
@@ -44,6 +45,11 @@ async function initializeStore() {
     store.dispatch(setTasks(tasks))
     store.dispatch(setInventory(inventory))
     store.dispatch(setNurses(nurses))
+    // 처방 데이터 로드
+    try {
+      const rxRes = await fetch('/api/prescriptions')
+      if (rxRes.ok) store.dispatch(setPrescriptions(await rxRes.json()))
+    } catch (e) { console.warn('prescriptions load failed', e) }
     try {
       const aRes = await fetch('/api/assignments')
       if (aRes.ok) {

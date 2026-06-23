@@ -68,6 +68,26 @@ export interface Medication {
   route: 'IV' | 'PO' | 'SC' | 'IM' | 'O2' | 'NEB' | 'Other'
 }
 
+// ── 의사 처방 ─────────────────────────────────
+export type PrescriptionStatus = 'active' | 'discontinued' | 'completed' | 'pending'
+
+export interface Prescription {
+  id: string
+  patientId: string
+  patientName: string
+  roomNumber: string
+  doctorName: string        // 처방 의사
+  orderedAt: number         // 처방 시각 (Unix ms)
+  medication: Medication
+  indication: string        // 처방 사유 (예: "폐렴 치료")
+  duration?: string         // 투약 기간 (예: "7일", "PRN")
+  startDate: string         // 투약 시작일 (YYYY-MM-DD)
+  endDate?: string          // 투약 종료일
+  status: PrescriptionStatus
+  nurseNote?: string        // 간호사 메모
+  verified: boolean         // 간호사 확인 여부
+}
+
 export interface Patient {
   id: string
   medicalRecordNo: string
