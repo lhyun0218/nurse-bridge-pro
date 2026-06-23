@@ -12,12 +12,10 @@ import './index.css'
 import App from './App.tsx'
 
 async function enableMocking() {
-  if (import.meta.env.DEV) {
-    // 구버전 분리 저장소 키 정리 (nb:persist:v1으로 통합됨)
-    try { localStorage.removeItem('mock:attendances:v1') } catch (e) {}
-    const { worker } = await import('./mocks/browser')
-    return worker.start({ onUnhandledRequest: 'bypass' })
-  }
+  // DEV + PROD 모두 MSW 사용 (실제 백엔드 없는 SPA 배포 환경)
+  try { localStorage.removeItem('mock:attendances:v1') } catch (e) {}
+  const { worker } = await import('./mocks/browser')
+  return worker.start({ onUnhandledRequest: 'bypass' })
 }
 
 // 앱 시작 시 MSW API 호출로 Redux Store 초기화
