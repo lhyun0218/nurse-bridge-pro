@@ -8,6 +8,7 @@ import { completeMultipleTasks } from '../../store/slices/tasksSlice'
 import { addNote } from '../../store/slices/nursingNotesSlice'
 import { addNotification } from '../../store/slices/notificationsSlice'
 import { addTask } from '../../store/slices/tasksSlice'
+import { buildPatientSnapshots } from '../../utils/buildPatientSnapshots'
 import type { NursingTask, Patient, Nurse, ShiftType, NoteCategory } from '../../types'
 
 // ── 타입 ──────────────────────────────────────────────────────────────────────
@@ -82,7 +83,7 @@ const ReportContent = React.forwardRef<HTMLDivElement, ReportContentProps>(
         ref={ref}
         style={{
           fontFamily: "'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif",
-          color: '#1A2B38',
+          color: 'var(--color-text)',
           padding: '32px 36px',
           maxWidth: '800px',
           margin: '0 auto',
@@ -102,11 +103,11 @@ const ReportContent = React.forwardRef<HTMLDivElement, ReportContentProps>(
               <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#2C6E8A', margin: 0 }}>
                 🏥 Nurse-Bridge PRO
               </h1>
-              <h2 style={{ fontSize: '16px', fontWeight: 600, margin: '4px 0 0', color: '#1A2B38' }}>
+              <h2 style={{ fontSize: '16px', fontWeight: 600, margin: '4px 0 0', color: 'var(--color-text)' }}>
                 인수인계 보고서
               </h2>
             </div>
-            <div style={{ textAlign: 'right', fontSize: '12px', color: '#6B8090' }}>
+            <div style={{ textAlign: 'right', fontSize: '12px', color: 'var(--color-muted)' }}>
               <div>작성일시: {reportDate}</div>
               <div>근무조: {SHIFT_LABEL[nurse.shiftType]}</div>
             </div>
@@ -125,11 +126,11 @@ const ReportContent = React.forwardRef<HTMLDivElement, ReportContentProps>(
             fontSize: '13px',
           }}
         >
-          <div><span style={{ color: '#6B8090' }}>담당 간호사: </span><strong>{nurse.name}</strong></div>
-          <div><span style={{ color: '#6B8090' }}>사번: </span><strong>{nurse.employeeId}</strong></div>
-          <div><span style={{ color: '#6B8090' }}>담당 환자: </span><strong>{targetPatients.length}명</strong></div>
+          <div><span style={{ color: 'var(--color-muted)' }}>담당 간호사: </span><strong>{nurse.name}</strong></div>
+          <div><span style={{ color: 'var(--color-muted)' }}>사번: </span><strong>{nurse.employeeId}</strong></div>
+          <div><span style={{ color: 'var(--color-muted)' }}>담당 환자: </span><strong>{targetPatients.length}명</strong></div>
           <div>
-            <span style={{ color: '#6B8090' }}>업무 완료율: </span>
+            <span style={{ color: 'var(--color-muted)' }}>업무 완료율: </span>
             <strong style={{ color: totalRate >= 80 ? '#2E7D5E' : totalRate >= 50 ? '#D4860A' : '#C0392B' }}>
               {totalRate}%
             </strong>
@@ -162,7 +163,7 @@ const ReportContent = React.forwardRef<HTMLDivElement, ReportContentProps>(
                 📝 특이사항 및 인수인계 메모
               </div>
               {pendingTasks.length > 0 ? (
-                <ul style={{ margin: '0 0 10px', paddingLeft: '18px', fontSize: '13px', color: '#1A2B38', lineHeight: '1.8' }}>
+                <ul style={{ margin: '0 0 10px', paddingLeft: '18px', fontSize: '13px', color: 'var(--color-text)', lineHeight: '1.8' }}>
                   {pendingTasks.map(task => (
                     <li key={task.taskId}>
                       <strong>{targetPatients.find(p => p.id === task.patientId)?.name ?? task.patientId}</strong>
@@ -175,17 +176,17 @@ const ReportContent = React.forwardRef<HTMLDivElement, ReportContentProps>(
               )}
               {topNotes.length > 0 && (
                 <div style={{ borderTop: '1px solid #C8DDE8', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: '#6B8090', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>
                     최근 간호 노트
                   </div>
                   {topNotes.map(note => {
                     const cfg = NOTE_CATEGORY_STYLE[note.category]
                     return (
-                      <div key={note.id} style={{ fontSize: '12px', color: '#1A2B38', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                      <div key={note.id} style={{ fontSize: '12px', color: 'var(--color-text)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                         <span style={{ padding: '1px 6px', borderRadius: 4, fontSize: 10, fontWeight: 700, background: cfg.bg, color: cfg.color, flexShrink: 0 }}>{cfg.label}</span>
-                        <span style={{ color: '#6B8090', flexShrink: 0 }}>[{note.patientName}]</span>
+                        <span style={{ color: 'var(--color-muted)', flexShrink: 0 }}>[{note.patientName}]</span>
                         <span style={{ lineHeight: 1.5 }}>{note.content.slice(0, 80)}{note.content.length > 80 ? '…' : ''}</span>
-                        <span style={{ color: '#6B8090', fontSize: 11, flexShrink: 0 }}>{formatNoteTime(note.timestamp)}</span>
+                        <span style={{ color: 'var(--color-muted)', fontSize: 11, flexShrink: 0 }}>{formatNoteTime(note.timestamp)}</span>
                       </div>
                     )
                   })}
@@ -197,7 +198,7 @@ const ReportContent = React.forwardRef<HTMLDivElement, ReportContentProps>(
 
         {/* ── 업무 요약 ── */}
         <div style={{ marginBottom: '20px' }}>
-          <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#6B8090', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px' }}>
+          <h3 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-muted)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px' }}>
             📊 업무 요약
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
@@ -216,7 +217,7 @@ const ReportContent = React.forwardRef<HTMLDivElement, ReportContentProps>(
                 }}
               >
                 <div style={{ fontSize: '22px', fontWeight: 700, color: item.color }}>{item.value}</div>
-                <div style={{ fontSize: '11px', color: '#6B8090', marginTop: '2px' }}>{item.label}</div>
+                <div style={{ fontSize: '11px', color: 'var(--color-muted)', marginTop: '2px' }}>{item.label}</div>
               </div>
             ))}
           </div>
@@ -251,7 +252,7 @@ const ReportContent = React.forwardRef<HTMLDivElement, ReportContentProps>(
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <span style={{ fontSize: '15px', fontWeight: 700 }}>{patient.name}</span>
-                  <span style={{ fontSize: '12px', color: '#6B8090' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--color-muted)' }}>
                     {patient.age}세 · {patient.gender === 'M' ? '남' : '여'} · 병실 {patient.roomNumber}
                   </span>
                   <span
@@ -318,9 +319,9 @@ const ReportContent = React.forwardRef<HTMLDivElement, ReportContentProps>(
                           >
                             {cat.label}
                           </span>
-                          <span style={{ color: '#1A2B38' }}>{task.taskName}</span>
+                          <span style={{ color: 'var(--color-text)' }}>{task.taskName}</span>
                           {task.description && (
-                            <span style={{ color: '#6B8090', fontSize: '11px' }}>— {task.description}</span>
+                            <span style={{ color: 'var(--color-muted)', fontSize: '11px' }}>— {task.description}</span>
                           )}
                         </div>
                       )
@@ -342,9 +343,9 @@ const ReportContent = React.forwardRef<HTMLDivElement, ReportContentProps>(
                         <div key={task.taskId} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
                           <span style={{ color: '#C0392B' }}>○</span>
                           <span style={{ padding: '1px 6px', borderRadius: '4px', fontSize: '10px', background: cat.bg, color: cat.color, fontWeight: 600, flexShrink: 0 }}>{cat.label}</span>
-                          <span style={{ color: '#1A2B38' }}>{task.taskName}</span>
-                          {task.description && <span style={{ color: '#6B8090', fontSize: '11px' }}>— {task.description}</span>}
-                          <span style={{ color: '#6B8090', fontSize: '11px', marginLeft: 'auto' }}>예정: {task.dueTime}</span>
+                          <span style={{ color: 'var(--color-text)' }}>{task.taskName}</span>
+                          {task.description && <span style={{ color: 'var(--color-muted)', fontSize: '11px' }}>— {task.description}</span>}
+                          <span style={{ color: 'var(--color-muted)', fontSize: '11px', marginLeft: 'auto' }}>예정: {task.dueTime}</span>
                         </div>
                       )
                     })}
@@ -360,7 +361,7 @@ const ReportContent = React.forwardRef<HTMLDivElement, ReportContentProps>(
                 if (patientNotes.length === 0) return null
                 return (
                   <div style={{ marginTop: '10px', borderTop: '1px dashed #DDE3E8', paddingTop: '8px' }}>
-                    <div style={{ fontSize: '11px', fontWeight: 600, color: '#6B8090', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-muted)', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
                       📋 특이사항 · 간호 노트 ({patientNotes.length})
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -369,8 +370,8 @@ const ReportContent = React.forwardRef<HTMLDivElement, ReportContentProps>(
                         return (
                           <div key={note.id} style={{ fontSize: '12px', display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
                             <span style={{ padding: '1px 6px', borderRadius: 4, fontSize: 10, fontWeight: 700, background: cfg.bg, color: cfg.color, flexShrink: 0 }}>{cfg.label}</span>
-                            <span style={{ color: '#1A2B38', lineHeight: 1.5, flex: 1 }}>{note.content}</span>
-                            <span style={{ color: '#6B8090', fontSize: 11, flexShrink: 0 }}>{formatNoteTime(note.timestamp)}</span>
+                            <span style={{ color: 'var(--color-text)', lineHeight: 1.5, flex: 1 }}>{note.content}</span>
+                            <span style={{ color: 'var(--color-muted)', fontSize: 11, flexShrink: 0 }}>{formatNoteTime(note.timestamp)}</span>
                           </div>
                         )
                       })}
@@ -450,38 +451,12 @@ const ShiftReportModal: React.FC<ShiftReportModalProps> = ({
       ? pendingTasks.map(t => `${patients.find(p => p.id === t.patientId)?.name ?? t.patientId} — ${t.taskName} 미완료`).join('; ')
       : '모든 업무 완료'
 
-    // 담당 환자 스냅샷 생성
+    // 담당 환자 스냅샷 생성 (buildPatientSnapshots 유틸 사용)
     const targetPatients = singlePatientId
       ? patients.filter(p => p.id === singlePatientId)
       : patients
 
-    const patientSnapshots = targetPatients.map(p => {
-      const ptTasks = tasks.filter(t => t.patientId === p.id)
-      const ptCompleted = ptTasks.filter(t => t.status === 'Completed')
-      const ptPending = ptTasks.filter(t => t.status === 'Pending')
-      const ptNotes = allNotes
-        .filter(n => n.patientId === p.id)
-        .sort((a, b) => b.timestamp - a.timestamp)
-        .slice(0, 3)
-        .map(n => n.content.slice(0, 100))
-      return {
-        patientId: p.id,
-        patientName: p.name,
-        roomNumber: p.roomNumber,
-        severity: p.severity,
-        diagnosis: p.diagnosis,
-        completedTaskCount: ptCompleted.length,
-        pendingTaskCount: ptPending.length,
-        pendingTaskNames: ptPending.map(t => t.taskName),
-        nursingNotesSummary: ptNotes,
-        vitalSigns: {
-          bloodPressure: p.vitalSigns?.bloodPressure,
-          heartRate: p.vitalSigns?.heartRate,
-          temperature: p.vitalSigns?.temperature,
-          oxygenSaturation: p.vitalSigns?.oxygenSaturation,
-        },
-      }
-    })
+    const patientSnapshots = buildPatientSnapshots(targetPatients, tasks, allNotes)
 
     const reportPayload: any = {
       reportId: `SR-${nurse.id}-${Date.now()}`,
@@ -620,10 +595,10 @@ const ShiftReportModal: React.FC<ShiftReportModalProps> = ({
                 }}
               >
                 <div>
-                  <div style={{ fontSize: '16px', fontWeight: 700, color: '#1A2B38' }}>
+                  <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-text)' }}>
                     📋 인수인계 보고서 미리보기
                   </div>
-                  <div style={{ fontSize: '12px', color: '#6B8090', marginTop: '2px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--color-muted)', marginTop: '2px' }}>
                     {nurse.name} · {SHIFT_LABEL[nurse.shiftType]} · {reportDate}
                   </div>
                   <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center' }}>
@@ -691,7 +666,7 @@ const ShiftReportModal: React.FC<ShiftReportModalProps> = ({
                       borderRadius: '8px',
                       fontSize: '18px',
                       cursor: 'pointer',
-                      color: '#6B8090',
+                      color: 'var(--color-muted)',
                     }}
                     onMouseEnter={e => (e.currentTarget.style.background = '#DDE3E8')}
                     onMouseLeave={e => (e.currentTarget.style.background = '#F0F4F7')}

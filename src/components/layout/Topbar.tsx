@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { LuMenu, LuSun, LuMoon, LuClock, LuBellDot } from 'react-icons/lu'
 import { useAppSelector } from '../../hooks/useAppSelector'
 import { useTheme } from '../../hooks/useTheme'
+import { minutesUntilShiftEnd } from '../../constants/shiftTimes'
+import type { ShiftType } from '../../types'
 
 interface TopbarProps {
   pageTitle: string
@@ -12,6 +14,7 @@ interface TopbarProps {
 
 export default function Topbar({ pageTitle, onMenuToggle, onNotificationClick }: TopbarProps) {
   const [currentTime, setCurrentTime] = useState(() => new Date())
+  const [remainingStr, setRemainingStr] = useState('')
   const [dark, setDark] = useState(false)
   const currentUser      = useAppSelector(s => s.auth.currentUser)
   const vitalAlerts      = useAppSelector(s => s.alerts.vitalAlerts)
@@ -19,12 +22,61 @@ export default function Topbar({ pageTitle, onMenuToggle, onNotificationClick }:
   const unreadCount      = useAppSelector(s => s.notifications.items.filter(n => !n.read).length)
   const hasAlerts        = vitalAlerts.length > 0 || medicationAlerts.length > 0 || unreadCount > 0
 
+  // 오늘 출근/퇴근 기록 조회
+  const todayStr = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+  const attendanceRecords = useAppSelector(s => s.attendance.records)
+  const todayRecord = currentUser
+    ? attendanceRecords.find(r => r.nurseId === currentUser.id && r.date === todayStr)
+    : undefined
+
   const { isDark, toggleTheme } = useTheme()
 
+  // 1초 인터벌: 시계 갱신
   useEffect(() => {
     const id = setInterval(() => setCurrentTime(new Date()), 1000)
     return () => clearInterval(id)
   }, [])
+
+  // 1분 인터벌: 남은 근무 시간 계산 (SHIFT_TIMES 기반)
+  useEffect(() => {
+    const calc = () => {
+      if (!currentUser?.shiftType) {
+        setRemainingStr('출근 전')
+        return
+      }
+
+      // checkOut 기록이 있으면 퇴근 완료
+      if (todayRecord?.checkOut != null) {
+        setRemainingStr('퇴근 완료')
+        return
+      }
+
+      // checkIn 기록이 없으면 출근 전
+      if (!todayRecord?.checkIn) {
+        setRemainingStr('출근 전')
+        return
+      }
+
+      // 근무 중: minutesUntilShiftEnd 기반 계산
+      const shiftType = currentUser.shiftType as ShiftType
+      const mins = minutesUntilShiftEnd(shiftType)
+      if (mins <= 0) {
+        setRemainingStr('근무 종료')
+        return
+      }
+      const hours = Math.floor(mins / 60)
+      const m = mins % 60
+      if (hours > 0) {
+        setRemainingStr(`남은 근무: ${hours}시간 ${m}분`)
+      } else {
+        setRemainingStr(`남은 근무: ${m}분`)
+      }
+    }
+
+    calc() // 즉시 실행
+    const id = setInterval(calc, 60000) // 1분 인터벌
+    return () => clearInterval(id)
+  }, [currentUser, todayRecord])
 
   useEffect(() => { setDark(isDark()) })
 
@@ -37,31 +89,6 @@ export default function Topbar({ pageTitle, onMenuToggle, onNotificationClick }:
     currentUser?.shiftType === 'Day'     ? 'Day 근무'
     : currentUser?.shiftType === 'Evening' ? 'Evening 근무'
     : 'Night 근무'
-
-  // 근무 종료까지 남은 시간 계산
-  const getRemainingShiftTime = (): string => {
-    const now = currentTime
-    const endDate = new Date(now)
-
-    if (currentUser?.shiftType === 'Day') {
-      endDate.setHours(15, 0, 0, 0)
-    } else if (currentUser?.shiftType === 'Evening') {
-      endDate.setHours(23, 0, 0, 0)
-    } else {
-      // Night: 다음날 06:00
-      endDate.setDate(endDate.getDate() + 1)
-      endDate.setHours(6, 0, 0, 0)
-    }
-
-    const diffMs = endDate.getTime() - now.getTime()
-    if (diffMs <= 0) return '근무 종료'
-    const diffMin = Math.floor(diffMs / 60000)
-    const hours = Math.floor(diffMin / 60)
-    const mins  = diffMin % 60
-    if (hours > 0) return `남은 근무: ${hours}시간 ${mins}분`
-    return `남은 근무: ${mins}분`
-  }
-  const remainingStr = getRemainingShiftTime()
 
   const btnStyle = {
     backgroundColor: 'var(--color-bg)',

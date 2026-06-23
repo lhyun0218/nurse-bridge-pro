@@ -32,16 +32,16 @@ const OvertimeChart: React.FC<OvertimeChartProps> = ({ nurses, scheduleRows }) =
   if (!hasSchedule) {
     return (
       <div style={{
-        background: '#FFFFFF', borderRadius: '10px',
+        background: 'var(--color-surface)', borderRadius: '10px',
         boxShadow: '0 2px 12px rgba(44,110,138,.09)', padding: '20px',
       }}>
         <div style={{
-          fontSize: '11px', fontWeight: 700, color: '#6B8090',
+          fontSize: '11px', fontWeight: 700, color: 'var(--color-muted)',
           textTransform: 'uppercase', letterSpacing: '.6px', marginBottom: '14px',
         }}>
           📅 간호사별 이번 달 근무일
         </div>
-        <div style={{ textAlign: 'center', padding: '24px', color: '#6B8090', fontSize: '13px' }}>
+        <div style={{ textAlign: 'center', padding: '24px', color: 'var(--color-muted)', fontSize: '13px' }}>
           근무표를 생성하면 근무일 현황이 표시됩니다
         </div>
       </div>
@@ -50,17 +50,17 @@ const OvertimeChart: React.FC<OvertimeChartProps> = ({ nurses, scheduleRows }) =
 
   return (
     <div style={{
-      background: '#FFFFFF', borderRadius: '10px',
+      background: 'var(--color-surface)', borderRadius: '10px',
       boxShadow: '0 2px 12px rgba(44,110,138,.09)', padding: '20px',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
         <div style={{
-          fontSize: '11px', fontWeight: 700, color: '#6B8090',
+          fontSize: '11px', fontWeight: 700, color: 'var(--color-muted)',
           textTransform: 'uppercase', letterSpacing: '.6px',
         }}>
           📅 간호사별 이번 달 근무일
         </div>
-        <div style={{ fontSize: '11px', color: '#6B8090' }}>
+        <div style={{ fontSize: '11px', color: 'var(--color-muted)' }}>
           <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '2px', background: '#C0392B', marginRight: '4px' }} />
           25일↑ 과부하
           <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '2px', background: '#D4860A', margin: '0 4px 0 10px' }} />
@@ -74,7 +74,7 @@ const OvertimeChart: React.FC<OvertimeChartProps> = ({ nurses, scheduleRows }) =
           <XAxis
             type="number"
             domain={[0, 31]}
-            tick={{ fontSize: 11, fill: '#6B8090' }}
+            tick={{ fontSize: 11, fill: 'var(--color-muted)' }}
             axisLine={false}
             tickLine={false}
             tickFormatter={v => `${v}일`}
@@ -82,7 +82,7 @@ const OvertimeChart: React.FC<OvertimeChartProps> = ({ nurses, scheduleRows }) =
           <YAxis
             dataKey="name"
             type="category"
-            tick={{ fontSize: 12, fill: '#1A2B38' }}
+            tick={{ fontSize: 12, fill: 'var(--color-text)' }}
             width={60}
             axisLine={false}
             tickLine={false}

@@ -33,7 +33,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
             display: 'flex',
             justifyContent: 'space-between',
             fontSize: '11px',
-            color: '#6B8090',
+            color: 'var(--color-muted)',
             marginBottom: '4px',
           }}
         >

@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   LuLayoutDashboard, LuClipboardList,
-  LuPackage, LuHeartPulse, LuMenu,
+  LuHeartPulse, LuMenu,
 } from 'react-icons/lu'
 
 interface BottomNavProps {
@@ -24,8 +24,7 @@ export default function BottomNav({ onMenuToggle }: BottomNavProps) {
   const tabs: NavTab[] = [
     { icon: <LuLayoutDashboard style={iconStyle} />, label: '홈',   to: '/dashboard' },
     { icon: <LuClipboardList   style={iconStyle} />, label: 'Todo', to: '/todos' },
-    { icon: <LuPackage         style={iconStyle} />, label: '재고', to: '/inventory' },
-    { icon: <LuHeartPulse    style={iconStyle} />, label: '관제', to: '/head-nurse' },
+    { icon: <LuHeartPulse      style={iconStyle} />, label: '관제', to: '/head-nurse' },
     { icon: <LuMenu            style={iconStyle} />, label: '메뉴', action: 'menu' },
   ]
 

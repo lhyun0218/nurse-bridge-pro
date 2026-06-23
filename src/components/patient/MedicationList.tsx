@@ -24,7 +24,7 @@ function countdownStyle(countdown: string | null): React.CSSProperties {
   if (minMatch && parseInt(minMatch[1], 10) <= 10) {
     return { color: '#D4860A', fontWeight: 600 }
   }
-  return { color: '#6B8090' }
+  return { color: 'var(--color-muted)' }
 }
 
 const MedicationList: React.FC<MedicationListProps> = ({ medications }) => {
@@ -59,8 +59,8 @@ const MedicationList: React.FC<MedicationListProps> = ({ medications }) => {
             }}
           >
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '13px', fontWeight: 500, color: '#1A2B38' }}>{med.name}</div>
-              <div style={{ fontSize: '11px', color: '#6B8090', marginTop: '1px' }}>
+              <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-text)' }}>{med.name}</div>
+              <div style={{ fontSize: '11px', color: 'var(--color-muted)', marginTop: '1px' }}>
                 {med.dosage} · {med.frequency}
               </div>
               {countdown && (

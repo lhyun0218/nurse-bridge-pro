@@ -224,9 +224,9 @@ const HandoverPage: React.FC = () => {
                             {pendingFromPrev.map((item, i) => (
                               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
                                 <span style={{ color: '#C0392B' }}>○</span>
-                                <span style={{ fontWeight: 600, color: '#1A2B38' }}>{item.patient.name}</span>
+                                <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{item.patient.name}</span>
                                 <span style={{ color: 'var(--color-muted)' }}>—</span>
-                                <span style={{ color: '#1A2B38' }}>{item.taskName}</span>
+                                <span style={{ color: 'var(--color-text)' }}>{item.taskName}</span>
                                 <span style={{ fontSize: '11px', color: 'var(--color-muted)', marginLeft: 'auto' }}>
                                   이전: {item.nurseName}
                                 </span>
@@ -461,7 +461,7 @@ const HandoverPage: React.FC = () => {
                         <span style={{ color: 'var(--color-muted)' }}>{task.taskName}</span>
                         {task.description && <span style={{ color: 'var(--color-muted)', opacity: 0.7 }}>— {task.description}</span>}
                         <span style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--color-muted)', flexShrink: 0 }}>
-                          {new Date(task.dueTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                          {task.dueTime}
                         </span>
                       </div>
                     ))}
@@ -481,6 +481,17 @@ const HandoverPage: React.FC = () => {
       </div>
 
       {/* 저장된 보고서 이력 */}
+      {savedReports.filter(r => r.nurseId === currentUser?.id).length === 0 && (
+        <div style={{ background: 'var(--color-surface)', borderRadius: '10px', boxShadow: '0 2px 12px rgba(44,110,138,.09)', padding: '20px', marginTop: '20px', textAlign: 'center' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-text)', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+            <LuBookOpen style={{ width: '15px', height: '15px', color: 'var(--color-primary)' }} />
+            저장된 인수인계 보고서
+          </h3>
+          <div style={{ color: 'var(--color-muted)', fontSize: '13px', padding: '12px 0' }}>
+            저장된 보고서가 없습니다
+          </div>
+        </div>
+      )}
       {savedReports.filter(r => r.nurseId === currentUser?.id).length > 0 && (
         <div style={{ background: 'var(--color-surface)', borderRadius: '10px', boxShadow: '0 2px 12px rgba(44,110,138,.09)', padding: '20px', marginTop: '20px' }}>
           <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-text)', margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: '8px' }}>

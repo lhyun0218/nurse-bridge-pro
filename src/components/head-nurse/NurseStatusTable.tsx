@@ -38,19 +38,19 @@ const NurseStatusTable: React.FC<NurseStatusTableProps> = ({ nurses, patients, a
 
   return (
     <div style={{
-      background: '#FFFFFF', borderRadius: '10px',
+      background: 'var(--color-surface)', borderRadius: '10px',
       boxShadow: '0 2px 12px rgba(44,110,138,.09)', padding: '20px',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
         <div style={{
-          fontSize: '11px', fontWeight: 700, color: '#6B8090',
+          fontSize: '11px', fontWeight: 700, color: 'var(--color-muted)',
           textTransform: 'uppercase', letterSpacing: '.6px',
         }}>
           👩‍⚕️ 간호사 현황
         </div>
         {/* 권고 기준 안내 */}
         <div style={{
-          fontSize: '11px', color: '#6B8090',
+          fontSize: '11px', color: 'var(--color-muted)',
           background: '#F7FAFB', padding: '4px 10px', borderRadius: '8px',
           border: '1px solid #DDE3E8',
         }}>
@@ -67,7 +67,7 @@ const NurseStatusTable: React.FC<NurseStatusTableProps> = ({ nurses, patients, a
                   key={h}
                   style={{
                     padding: '10px 12px', textAlign: 'left',
-                    fontSize: '11px', fontWeight: 700, color: '#6B8090',
+                    fontSize: '11px', fontWeight: 700, color: 'var(--color-muted)',
                     textTransform: 'uppercase', letterSpacing: '.4px',
                     borderBottom: '2px solid #DDE3E8',
                   }}
@@ -110,7 +110,7 @@ const NurseStatusTable: React.FC<NurseStatusTableProps> = ({ nurses, patients, a
                   <td style={{ padding: '12px' }}>
                     {nurseCompleted} / {nurseTasks.length}
                     {nurseTasks.length > 0 && (
-                      <span style={{ marginLeft: '6px', fontSize: '11px', color: '#6B8090' }}>
+                      <span style={{ marginLeft: '6px', fontSize: '11px', color: 'var(--color-muted)' }}>
                         ({Math.round((nurseCompleted / nurseTasks.length) * 100)}%)
                       </span>
                     )}
@@ -126,7 +126,7 @@ const NurseStatusTable: React.FC<NurseStatusTableProps> = ({ nurses, patients, a
                         )}
                       </>
                     ) : (
-                      <span style={{ fontSize: '11px', color: '#6B8090' }}>근무표 미생성</span>
+                      <span style={{ fontSize: '11px', color: 'var(--color-muted)' }}>근무표 미생성</span>
                     )}
                   </td>
                   <td style={{ padding: '12px' }}>

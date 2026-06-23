@@ -48,13 +48,13 @@ const AISummaryCard: React.FC<AISummaryCardProps> = ({ summary, generatedAt }) =
         </div>
         <div>
           <div style={{ fontSize: '13px', fontWeight: 600, color: '#2C6E8A' }}>AI 인수인계 요약</div>
-          <div style={{ fontSize: '11px', color: '#6B8090' }}>이전 근무조 기록 기반 · 오늘 {timeStr} 생성</div>
+          <div style={{ fontSize: '11px', color: 'var(--color-muted)' }}>이전 근무조 기록 기반 · 오늘 {timeStr} 생성</div>
         </div>
       </div>
 
       {/* 로딩 */}
       {loading && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#6B8090', fontSize: '13px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-muted)', fontSize: '13px' }}>
           <div
             style={{
               width: '16px', height: '16px',
@@ -83,7 +83,7 @@ const AISummaryCard: React.FC<AISummaryCardProps> = ({ summary, generatedAt }) =
                   hidden: { opacity: 0, x: -10 },
                   visible: { opacity: 1, x: 0 },
                 }}
-                style={{ display: 'flex', gap: '8px', fontSize: '13px', color: '#1A2B38', lineHeight: 1.5 }}
+                style={{ display: 'flex', gap: '8px', fontSize: '13px', color: 'var(--color-text)', lineHeight: 1.5 }}
               >
                 <span style={{ color: '#2C6E8A', fontWeight: 700, flexShrink: 0 }}>✓</span>
                 {line}

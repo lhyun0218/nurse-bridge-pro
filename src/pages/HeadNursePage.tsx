@@ -5,17 +5,16 @@ import { LuFileSpreadsheet, LuDownload } from 'react-icons/lu'
 import { useAppDispatch } from '../hooks/useAppDispatch'
 import { useAppSelector } from '../hooks/useAppSelector'
 import { useToast } from '../hooks/useToast'
-import { setNurses, reassignPatient } from '../store/slices/nursesSlice'
+import { setNurses } from '../store/slices/nursesSlice'
 import { setPatients } from '../store/slices/patientsSlice'
 import { Toast, Button } from '../components/common'
-import { getReassignmentSuggestion, getOvertimeStatus, getMonthlyWorkDays } from '../utils/overtime'
+import { getOvertimeStatus, getMonthlyWorkDays } from '../utils/overtime'
 import { exportAllNursesScheduleToExcel } from '../utils/exportScheduleExcel'
 import {
   OccupancyChart,
   SeverityPieChart,
   OvertimeChart,
   NurseStatusTable,
-  ReassignBanner,
 } from '../components/head-nurse'
 import { setAssignments } from '../store/slices/assignmentsSlice'
 import { autoAssignPatients } from '../utils/autoAssignPatients'
@@ -122,18 +121,6 @@ const HeadNursePage: React.FC = () => {
     { name: 'Low',    value: patients.filter(p => p.severity === 'Low').length,    color: '#2E7D5E' },
   ]
 
-  // ── AI 재배치 추천 ─────────────────────────
-  const suggestion = getReassignmentSuggestion(activeNurses, currentMonthSchedule)
-
-  const handleReassign = () => {
-    if (!suggestion) return
-    dispatch(reassignPatient({
-      patientId:    suggestion.patientId,
-      fromNurseId:  suggestion.fromNurse.id,
-      toNurseId:    suggestion.toNurse.id,
-    }))
-    success(`✅ 재배치 완료: ${suggestion.fromNurse.name} → ${suggestion.toNurse.name}`)
-  }
 
   const handleApplyAutoAssign = async () => {
     try {
@@ -294,9 +281,9 @@ const HeadNursePage: React.FC = () => {
       }}>
         {statCards.map(c => (
           <div key={c.label} style={{ ...card, borderTop: `3px solid ${c.border}` }}>
-            <div style={{ fontSize: '11px', color: '#6B8090', marginBottom: '6px' }}>{c.label}</div>
+            <div style={{ fontSize: '11px', color: 'var(--color-muted)', marginBottom: '6px' }}>{c.label}</div>
             <div style={{ fontSize: '22px', fontWeight: 700, color: c.color }}>{c.value}</div>
-            <div style={{ fontSize: '11px', color: '#6B8090', marginTop: '3px' }}>{c.sub}</div>
+            <div style={{ fontSize: '11px', color: 'var(--color-muted)', marginTop: '3px' }}>{c.sub}</div>
             <div style={{ height: '4px', background: '#DDE3E8', borderRadius: '2px', marginTop: '8px', overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${c.fillPct}%`, background: c.color, borderRadius: '2px', transition: 'width .4s' }} />
             </div>
@@ -309,8 +296,8 @@ const HeadNursePage: React.FC = () => {
           <div style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <div style={{ fontSize: '13px', fontWeight: 700 }}>Coverage 경고</div>
-              <div style={{ fontSize: '12px', color: '#6B8090', marginTop: '6px' }}>이번 달에 교대별 최소 인원 미달이 {coverage.holes.length}건 감지되었습니다.</div>
-              <div style={{ fontSize: '12px', color: '#6B8090', marginTop: '8px' }}>
+              <div style={{ fontSize: '12px', color: 'var(--color-muted)', marginTop: '6px' }}>이번 달에 교대별 최소 인원 미달이 {coverage.holes.length}건 감지되었습니다.</div>
+              <div style={{ fontSize: '12px', color: 'var(--color-muted)', marginTop: '8px' }}>
                 {coverage.holes.slice(0, 4).map((h: any) => (
                   <div key={`${h.date}-${h.shift}`} style={{ marginTop: '4px' }}>
                     • {new Date(h.date).toLocaleDateString('ko-KR')} · {h.shift} — {h.count}/{h.required}
@@ -330,11 +317,11 @@ const HeadNursePage: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
           <div>
             <h3 style={{ fontSize: '15px', fontWeight: 700, margin: 0 }}>이번 달 저장된 근무표</h3>
-            <p style={{ margin: '6px 0 0', fontSize: '12px', color: '#6B8090' }}>
+            <p style={{ margin: '6px 0 0', fontSize: '12px', color: 'var(--color-muted)' }}>
               자동 생성된 스케줄이 있으면 이곳에 표시됩니다. 없으면 근무표 자동 생성 페이지에서 먼저 생성하세요.
             </p>
           </div>
-          <div style={{ fontSize: '12px', color: '#6B8090' }}>
+          <div style={{ fontSize: '12px', color: 'var(--color-muted)' }}>
             {scheduleMonth}월 · {currentMonthSchedule.length > 0 ? '저장됨' : '미생성'}
           </div>
         </div>
@@ -380,7 +367,7 @@ const HeadNursePage: React.FC = () => {
             </table>
           </div>
         ) : (
-          <div style={{ padding: '14px 0', color: '#6B8090', borderTop: '1px solid #E8EDF0' }}>
+          <div style={{ padding: '14px 0', color: 'var(--color-muted)', borderTop: '1px solid #E8EDF0' }}>
             현재 저장된 근무표가 없습니다. 수간호사 관리 페이지에서 스케줄을 먼저 생성하거나 수정해 주세요.
           </div>
         )}
@@ -395,7 +382,7 @@ const HeadNursePage: React.FC = () => {
       }}>
         {/* 좌측: 병상 가동률 + 오버타임 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <OccupancyChart scheduleRows={currentMonthSchedule} totalBeds={totalBeds} />
+        <OccupancyChart totalBeds={totalBeds} />
           <OvertimeChart nurses={activeNurses} scheduleRows={currentMonthSchedule} />
         </div>
 
@@ -407,9 +394,6 @@ const HeadNursePage: React.FC = () => {
       <div style={{ marginBottom: '16px' }}>
         <NurseStatusTable nurses={nurses} patients={patients} allTasks={allTasks} scheduleRows={currentMonthSchedule} />
       </div>
-
-      {/* ── AI 재배치 배너 ── */}
-      <ReassignBanner suggestion={suggestion} onApply={handleReassign} />
 
       {/* ── 간호사별 담당 환자 ── */}
       <div style={{ marginTop: '16px' }}>
@@ -439,7 +423,7 @@ const HeadNursePage: React.FC = () => {
             const nurseWorkDays = getMonthlyWorkDays(nurse.id, currentMonthSchedule)
             const isOT       = hasSchedule && nurseWorkDays > 22
             const todayShift = getTodayShift(nurse.id)
-            const shiftColor = todayShift === 'Day' ? '#2C6E8A' : todayShift === 'Evening' ? '#D4860A' : todayShift === 'Night' ? '#3F51B5' : '#6B8090'
+            const shiftColor = todayShift === 'Day' ? '#2C6E8A' : todayShift === 'Evening' ? '#D4860A' : todayShift === 'Night' ? '#3F51B5' : 'var(--color-muted)'
 
             return (
               <div key={nurse.id} style={{ ...card, padding: '16px 20px' }}>
@@ -556,7 +540,7 @@ const HeadNursePage: React.FC = () => {
                               {patient.name}
                             </span>
                             <span style={{ fontSize: '11px', color: 'var(--color-muted)' }}>
-                              {patient.roomNumber}호
+                              {patient.roomNumber}
                             </span>
                             <span style={{
                               marginLeft: 'auto', fontSize: '10px', fontWeight: 700,

@@ -6,11 +6,14 @@ import { useAppSelector } from '../hooks/useAppSelector'
 import { setNurses } from '../store/slices/nursesSlice'
 import { setPatients } from '../store/slices/patientsSlice'
 import { computeStatus } from '../utils/attendanceStatus'
+import { getNurseShiftToday, SHIFT_TIMES } from '../constants/shiftTimes'
+import type { ShiftType } from '../types'
 
 const STATUS_CONFIG = {
-  Active:   { label: '근무 중',  bg: '#E8F5EE', color: '#2E7D5E', icon: LuCircleCheck },
-  OnBreak:  { label: '휴게 중',  bg: '#FEF3E2', color: '#D4860A', icon: LuCoffee },
-  ShiftEnd: { label: '근무 종료', bg: '#F0F4F7', color: '#6B8090', icon: LuClock },
+  BeforeShift: { label: '출근 전',  bg: '#EEF2FF', color: '#3F51B5', icon: LuClock },
+  Active:      { label: '근무 중',  bg: '#E8F5EE', color: '#2E7D5E', icon: LuCircleCheck },
+  OnBreak:     { label: '휴게 중',  bg: '#FEF3E2', color: '#D4860A', icon: LuCoffee },
+  ShiftEnd:    { label: '근무 종료', bg: '#F0F4F7', color: '#8FA0B0', icon: LuClock },
 }
 
 const SHIFT_LABEL = { Day: '주간', Evening: '저녁', Night: '야간' }
@@ -18,14 +21,18 @@ const SHIFT_COLOR = { Day: '#2C6E8A', Evening: '#D4860A', Night: '#3F51B5' }
 
 const ColleaguesPage: React.FC = () => {
   const dispatch = useAppDispatch()
-  const nurses   = useAppSelector(s => s.nurses.allNurses)
-  const patients = useAppSelector(s => s.patients.allPatients)
+  const nurses     = useAppSelector(s => s.nurses.allNurses)
+  const patients   = useAppSelector(s => s.patients.allPatients)
   const attendance = useAppSelector(s => s.attendance.records)
-  const todayKey = (() => {
-    const d = new Date()
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  })()
+  const now        = new Date()
+  const todayKey   = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
   const assignsToday = useAppSelector(s => s.assignments.byDate[todayKey] ?? {})
+
+  // 현재 월 근무표 행 (scheduleSlice)
+  const scheduleKey  = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  const scheduleRows = useAppSelector(s => s.schedule.saved[scheduleKey] ?? [])
+  // 오늘 날짜 인덱스 (0-based)
+  const dateIndex    = now.getDate() - 1
 
   useEffect(() => {
     const shouldFetchNurses   = nurses.length === 0
@@ -50,8 +57,8 @@ const ColleaguesPage: React.FC = () => {
 
   const activeNurses = nurses.filter(n => n.role === 'Nurse')
 
-  // 오늘 날짜 키
-  const today = new Date().toISOString().slice(0, 10)
+  // 오늘 날짜 키 (todayKey 와 동일)
+  const today = todayKey
 
   return (
     <motion.div
@@ -66,28 +73,35 @@ const ColleaguesPage: React.FC = () => {
           동료 현황
         </h2>
         <p style={{ fontSize: '13px', color: 'var(--color-muted)', marginTop: '4px' }}>
-          현재 병동 근무 중인 간호사 {activeNurses.filter(n => computeStatus(attendance, n, today) === 'Active').length}명
+          현재 병동 근무 중인 간호사 {activeNurses.filter(n => computeStatus(attendance, n, today, n.shiftType) === 'Active').length}명
         </p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
         {activeNurses.map(nurse => {
-          const statusKey = computeStatus(attendance, nurse, today)
+          // 근무표에서 오늘 ShiftType 조회, 없으면 nurse.shiftType 으로 fallback
+          const rawShift = getNurseShiftToday(nurse.id, scheduleRows, dateIndex, nurse.shiftType)
+          const todayShiftType: ShiftType = rawShift === 'OFF' ? nurse.shiftType : rawShift
+
+          const statusKey = computeStatus(attendance, nurse, today, todayShiftType)
           const cfg = STATUS_CONFIG[statusKey]
           const StatusIcon = cfg.icon
           const assignedCount = patients.filter(p => Object.values(assignsToday[p.id] ?? {}).includes(nurse.id)).length
           const isOT = nurse.overtimeHours >= 3
 
+          // SHIFT_TIMES 기반 근무 시간
           return (
             <motion.div
               key={nurse.id}
-              whileHover={{ y: -2, boxShadow: '0 6px 22px rgba(44,110,138,.14)' }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
               style={{
                 background: 'var(--color-surface)',
                 borderRadius: '10px',
                 boxShadow: '0 2px 12px rgba(44,110,138,.09)',
                 padding: '18px 20px',
-                borderLeft: `4px solid ${SHIFT_COLOR[nurse.shiftType]}`,
+                borderLeft: `4px solid ${SHIFT_COLOR[todayShiftType]}`,
               }}
             >
               {/* 헤더 */}
@@ -95,7 +109,7 @@ const ColleaguesPage: React.FC = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <div style={{
                     width: '38px', height: '38px', borderRadius: '50%',
-                    background: SHIFT_COLOR[nurse.shiftType],
+                    background: SHIFT_COLOR[todayShiftType],
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     color: '#fff', fontSize: '14px', fontWeight: 700, flexShrink: 0,
                   }}>
@@ -126,15 +140,7 @@ const ColleaguesPage: React.FC = () => {
                 </span>
                 <span style={{ fontSize: '11px', color: 'var(--color-muted)', display: 'flex', alignItems: 'center', gap: '3px' }}>
                   <LuClock style={{ width: '11px', height: '11px' }} />
-                  {(() => {
-                    const fmt = (s: string) => {
-                      if (!s) return ''
-                      const parts = s.split(':')
-                      if (parts.length !== 2) return s
-                      return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`
-                    }
-                    return `${fmt(nurse.workStart)} ~ ${fmt(nurse.workEnd)}`
-                  })()}
+                  {SHIFT_TIMES[todayShiftType].workStart} ~ {SHIFT_TIMES[todayShiftType].workEnd}
                 </span>
               </div>
 

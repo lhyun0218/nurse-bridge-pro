@@ -135,7 +135,7 @@ const PatientGrid: React.FC<PatientGridProps> = ({ patients, getPatientTasks }) 
               top: '50%',
               transform: 'translateY(-50%)',
               fontSize: '14px',
-              color: '#6B8090',
+              color: 'var(--color-muted)',
               pointerEvents: 'none',
             }}
           >
@@ -173,7 +173,7 @@ const PatientGrid: React.FC<PatientGridProps> = ({ patients, getPatientTasks }) 
                 border: 'none',
                 cursor: 'pointer',
                 fontSize: '14px',
-                color: '#6B8090',
+                color: 'var(--color-muted)',
                 padding: '2px',
                 lineHeight: 1,
               }}
@@ -286,7 +286,7 @@ const PatientGrid: React.FC<PatientGridProps> = ({ patients, getPatientTasks }) 
             <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--color-text)', marginBottom: '6px' }}>
               검색 결과가 없습니다
             </div>
-            <div style={{ fontSize: '13px', color: '#6B8090', marginBottom: '16px' }}>
+            <div style={{ fontSize: '13px', color: 'var(--color-muted)', marginBottom: '16px' }}>
               {searchQuery
                 ? `"${searchQuery}"에 해당하는 환자를 찾을 수 없습니다.`
                 : '선택한 필터 조건에 맞는 환자가 없습니다.'}

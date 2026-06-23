@@ -2,7 +2,7 @@ import React from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LuLayoutDashboard, LuUsers, LuClipboardList,
-  LuPackage, LuCalendarDays, LuHeartPulse,
+  LuCalendarDays, LuHeartPulse,
   LuUserPlus, LuLogOut, LuWand,
   LuPill, LuUserCheck, LuArrowLeftRight,
 } from 'react-icons/lu'
@@ -95,9 +95,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           badge: pendingTaskCount > 0 ? pendingTaskCount : null, badgeVariant: 'warn',
         },
         { icon: <LuPill         style={iconStyle} />, label: '투약 스케줄', to: '/medication', exact: true },
-        { icon: <LuPackage      style={iconStyle} />, label: '물품 재고',   to: '/inventory',  exact: true },
         { icon: <LuCalendarDays style={iconStyle} />, label: '근무 일정',   to: '/schedule',   exact: true },
-        { icon: <LuUserCheck style={iconStyle} />,   label: '출석',       to: '/attendance', exact: true, badge: myAttBadge, badgeVariant: 'warn' as const },
+        { icon: <LuUserCheck style={iconStyle} />,   label: '근태',       to: '/attendance', exact: true, badge: myAttBadge, badgeVariant: 'warn' as const },
       ],
     },
     {
@@ -120,7 +119,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     {
       label: '병동 관리',
       items: [
-        { icon: <LuPackage style={iconStyle} />,   label: '물품 재고', to: '/inventory',               exact: true },
         { icon: <LuUserPlus style={iconStyle} />,  label: '환자 등록', to: '/head-nurse/patients/new', exact: true },
       ],
     },
@@ -129,7 +127,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       items: [
         { icon: <LuCalendarDays style={iconStyle} />, label: '근무 일정',     to: '/schedule',                     exact: true },
         { icon: <LuWand style={iconStyle} />,         label: '근무표 자동생성', to: '/head-nurse/schedule/generate', exact: true },
-        { icon: <LuUserCheck style={iconStyle} />,   label: '출석 관리',     to: '/head-nurse/attendance', exact: true, badge: pendingCheckoutCount || null, badgeVariant: 'warn' as const },
+        { icon: <LuUserCheck style={iconStyle} />,   label: '근태 관리',     to: '/head-nurse/attendance', exact: true, badge: pendingCheckoutCount || null, badgeVariant: 'warn' as const },
       ],
     },
   ]
@@ -148,9 +146,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const roleBadgeBg = isHeadNurse ? '#D4860A' : '#2E7D5E'
 
   const shiftLabel =
-    currentUser?.shiftType === 'Day'     ? 'Day · 06:00~15:00'
-    : currentUser?.shiftType === 'Evening' ? 'Evening · 14:00~23:00'
-    : 'Night · 22:00~07:00'
+    currentUser?.shiftType === 'Day'     ? `Day · 07:30~16:00`
+    : currentUser?.shiftType === 'Evening' ? `Evening · 15:30~00:00`
+    : `Night · 23:30~08:00`
 
   const linkBase: React.CSSProperties = {
     display: 'flex', alignItems: 'center', gap: '10px',

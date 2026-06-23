@@ -26,7 +26,7 @@ const card: React.CSSProperties = {
 const cardTitle: React.CSSProperties = {
   fontSize: '11px',
   fontWeight: 700,
-  color: '#6B8090',
+  color: 'var(--color-muted)',
   textTransform: 'uppercase',
   letterSpacing: '0.6px',
   marginBottom: '14px',
@@ -58,7 +58,7 @@ const PatientDetailPage: React.FC = () => {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 58px)', gap: '16px' }}>
         <div style={{ fontSize: '48px' }}>🔍</div>
-        <div style={{ fontSize: '16px', color: '#6B8090' }}>환자를 찾을 수 없습니다.</div>
+        <div style={{ fontSize: '16px', color: 'var(--color-muted)' }}>환자를 찾을 수 없습니다.</div>
         <button
           onClick={() => navigate('/dashboard')}
           style={{ padding: '10px 20px', background: '#2C6E8A', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 600 }}
@@ -97,7 +97,7 @@ const PatientDetailPage: React.FC = () => {
           >
             ← 목록
           </button>
-          <div style={{ fontSize: '16px', fontWeight: 700, color: '#1A2B38' }}>
+          <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-text)' }}>
             {patient.name} · 병실 {patient.roomNumber}
             {patient.vitalSigns?.lastUpdated && (
               <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--color-muted)' }}>
@@ -143,7 +143,7 @@ const PatientDetailPage: React.FC = () => {
               { label: '성별', value: patient.gender === 'M' ? '남성 (Male)' : '여성 (Female)' },
               { label: '혈액형', value: patient.bloodType ? `${patient.bloodType}형` : '미확인', highlight: true },
               { label: '등록번호', value: patient.medicalRecordNo },
-              { label: '병실', value: `${patient.roomNumber}호` },
+              { label: '병실', value: patient.roomNumber },
               { label: '입원일수', value: `${days}일차 (${new Date(patient.admissionDate).toLocaleDateString('ko-KR')})` },
               ...(patient.height ? [{ label: '신장', value: `${patient.height} cm` }] : []),
               ...(patient.weight ? [{ label: '체중', value: `${patient.weight} kg` }] : []),
@@ -286,10 +286,10 @@ const PatientDetailPage: React.FC = () => {
           onClick={() => navigate('/dashboard')}
           style={{
             padding: '11px 22px', borderRadius: '8px', fontSize: '14px', fontWeight: 600,
-            border: '1.5px solid #DDE3E8', background: '#FFFFFF', color: '#1A2B38', cursor: 'pointer',
+            border: '1.5px solid #DDE3E8', background: 'var(--color-surface)', color: 'var(--color-text)', cursor: 'pointer',
           }}
           onMouseEnter={e => { e.currentTarget.style.borderColor = '#2C6E8A'; e.currentTarget.style.color = '#2C6E8A' }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = '#DDE3E8'; e.currentTarget.style.color = '#1A2B38' }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = '#DDE3E8'; e.currentTarget.style.color = 'var(--color-text)' }}
         >
           ← 목록으로
         </button>

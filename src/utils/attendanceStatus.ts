@@ -1,6 +1,7 @@
-import type { Nurse } from '../types'
+import type { Nurse, ShiftType } from '../types'
+import { SHIFT_TIMES } from '../constants/shiftTimes'
 
-export type StatusKey = 'Active' | 'OnBreak' | 'ShiftEnd'
+export type StatusKey = 'BeforeShift' | 'Active' | 'OnBreak' | 'ShiftEnd'
 
 export const getTodayAttendance = (records: any[], nurseId: string, dateKey: string) => {
   return records.find(r => r.nurseId === nurseId && r.date === dateKey)
@@ -21,27 +22,30 @@ export const isNowInRange = (startStr: string, endStr: string, now = new Date())
   }
 }
 
-export const computeStatus = (records: any[], nurse: Nurse, dateKey: string, now = new Date()): StatusKey => {
+export const computeStatus = (
+  records: any[],
+  nurse: Nurse,
+  dateKey: string,
+  shiftType: ShiftType,
+  now = new Date()
+): StatusKey => {
   const rec = getTodayAttendance(records, nurse.id, dateKey)
-  // Attendance data takes precedence
+
   if (rec) {
-    if (rec.onBreak) return 'OnBreak'
     if (rec.checkOut) return 'ShiftEnd'
+    if (rec.onBreak) return 'OnBreak'
     if (rec.checkIn) return 'Active'
-    if (rec.leaveRequested) {
-      if (rec.leaveStatus === 'Approved') return 'ShiftEnd'
-      // Pending/Denied treated as not on active duty
-      return 'ShiftEnd'
-    }
-    // checkoutRequested without checkOut -> still active until checked out
-    if (rec.checkoutRequested) return 'Active'
+    if (rec.leaveRequested) return 'ShiftEnd'
+    // checkIn 없으면 무조건 Active 금지
   }
 
-  // If nurse explicitly marked OnBreak in nurse record, respect it
-  if (nurse.status === 'OnBreak') return 'OnBreak'
+  // 출근 기록 없음 → 현재 시각이 교대 시작 전이면 BeforeShift, 이후면 ShiftEnd(결근)
+  const startStr = SHIFT_TIMES[shiftType].workStart
+  const [sH, sM] = startStr.split(':').map(Number)
+  const shiftStart = new Date(now)
+  shiftStart.setHours(sH, sM, 0, 0)
 
-  // Fallback to schedule-based check
-  if (isNowInRange(nurse.workStart, nurse.workEnd, now)) return 'Active'
+  if (now < shiftStart) return 'BeforeShift'
   return 'ShiftEnd'
 }
 

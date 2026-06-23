@@ -1,4 +1,4 @@
-import type { Nurse, Patient, InventoryItem } from '../types'
+import type { Nurse, Patient } from '../types'
 export { mockTasks } from './mockTasks'
 import { hydratePatientsWithTaskIds } from './mockTasks'
 import { patientMedications, mockPrescriptions } from './mockMedications'
@@ -6,17 +6,17 @@ export { mockPrescriptions }
 
 export const mockNurses: Nurse[] = [
   // Day nurses
-  { id: 'n1', name: '이현규',   employeeId: 'EMP001', role: 'Nurse', shiftType: 'Day',     assignedPatients: [], status: 'Active', overtimeHours: 0, workStart: '08:30', workEnd: '17:30' },
-  { id: 'n4', name: '오지현',   employeeId: 'EMP004', role: 'Nurse', shiftType: 'Day',     assignedPatients: [], status: 'Active', overtimeHours: 0, workStart: '08:30', workEnd: '17:30' },
-  { id: 'n5', name: '김우주',   employeeId: 'EMP005', role: 'Nurse', shiftType: 'Day',     assignedPatients: [], status: 'Active', overtimeHours: 0, workStart: '08:30', workEnd: '17:30' },
+  { id: 'n1', name: '이현규',   employeeId: 'EMP001', role: 'Nurse', shiftType: 'Day',     assignedPatients: [], status: 'Active', overtimeHours: 0, workStart: '07:30', workEnd: '16:00' },
+  { id: 'n4', name: '오지현',   employeeId: 'EMP004', role: 'Nurse', shiftType: 'Day',     assignedPatients: [], status: 'Active', overtimeHours: 0, workStart: '07:30', workEnd: '16:00' },
+  { id: 'n5', name: '김우주',   employeeId: 'EMP005', role: 'Nurse', shiftType: 'Day',     assignedPatients: [], status: 'Active', overtimeHours: 0, workStart: '07:30', workEnd: '16:00' },
   // Evening nurses
-  { id: 'n2', name: '이수연',   employeeId: 'EMP002', role: 'Nurse', shiftType: 'Evening', assignedPatients: [], status: 'Active', overtimeHours: 0, workStart: '16:30', workEnd: '01:30' },
-  { id: 'n6', name: '김다현',    employeeId: 'EMP007', role: 'Nurse', shiftType: 'Evening', assignedPatients: [], status: 'Active', overtimeHours: 0, workStart: '16:30', workEnd: '01:30' },
+  { id: 'n2', name: '이수연',   employeeId: 'EMP002', role: 'Nurse', shiftType: 'Evening', assignedPatients: [], status: 'Active', overtimeHours: 0, workStart: '15:30', workEnd: '00:00' },
+  { id: 'n6', name: '김다현',    employeeId: 'EMP007', role: 'Nurse', shiftType: 'Evening', assignedPatients: [], status: 'Active', overtimeHours: 0, workStart: '15:30', workEnd: '00:00' },
   // Night nurses
-  { id: 'n3', name: '박준호',   employeeId: 'EMP003', role: 'Nurse', shiftType: 'Night',   assignedPatients: [], status: 'Active', overtimeHours: 0, workStart: '00:30', workEnd: '09:30' },
-  { id: 'n7', name: '김라온',   employeeId: 'EMP008', role: 'Nurse', shiftType: 'Night',   assignedPatients: [], status: 'Active', overtimeHours: 0, workStart: '00:30', workEnd: '09:30' },
+  { id: 'n3', name: '박준호',   employeeId: 'EMP003', role: 'Nurse', shiftType: 'Night',   assignedPatients: [], status: 'Active', overtimeHours: 0, workStart: '23:30', workEnd: '08:00' },
+  { id: 'n7', name: '김라온',   employeeId: 'EMP008', role: 'Nurse', shiftType: 'Night',   assignedPatients: [], status: 'Active', overtimeHours: 0, workStart: '23:30', workEnd: '08:00' },
   // Head nurse
-  { id: 'admin1', name: '수간호사 홍길동', employeeId: 'EMP006', role: 'HeadNurse', shiftType: 'Day', assignedPatients: [], status: 'Active', overtimeHours: 0, workStart: '08:00', workEnd: '17:00' },
+  { id: 'admin1', name: '수간호사 홍길동', employeeId: 'EMP006', role: 'HeadNurse', shiftType: 'Day', assignedPatients: [], status: 'Active', overtimeHours: 0, workStart: '07:30', workEnd: '16:00' },
 ]
 
 // Create a larger set of patients so algorithm can be exercised
@@ -52,10 +52,6 @@ export const mockPatients: Patient[] = [
 
 // 진단별 처방 약물 주입
 mockPatients.forEach(p => { if (patientMedications[p.id]) p.medications = patientMedications[p.id] })
-
-export const mockInventory: InventoryItem[] = [
-  { itemId: 'i1', itemName: '주사기 10ml', category: 'Syringe', quantity: 120, reorderPoint: 30, unit: '개', status: 'sufficient', history: [] },
-]
 
 export const mockAttendances: Array<{ id: string; nurseId: string; action: 'checkout' | 'checkin'; timestamp: string; shiftType?: string }> = []
 

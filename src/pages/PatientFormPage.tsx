@@ -4,8 +4,10 @@ import { motion } from 'framer-motion'
 import { useAppDispatch } from '../hooks/useAppDispatch'
 import { useAppSelector } from '../hooks/useAppSelector'
 import { addPatient, updatePatient } from '../store/slices/patientsSlice'
+import { setAssignments } from '../store/slices/assignmentsSlice'
 import { useToast } from '../hooks/useToast'
 import { Button, Toast } from '../components/common'
+import { autoAssignPatients } from '../utils/autoAssignPatients'
 import type { Patient, Severity } from '../types'
 
 // ── 진단명별 Todo 템플릿 미리보기 ─────────────────
@@ -100,6 +102,10 @@ const PatientFormPage: React.FC = () => {
   const [diagnosisList, setDiagnosisList] = useState<string[]>([])
   const [todoPreview, setTodoPreview] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<{ name?: string; roomNumber?: string; diagnosis?: string }>({})
+
+  const allNursesForAssign = useAppSelector(s => s.nurses.allNurses)
+  const scheduleSaved      = useAppSelector(s => s.schedule.saved)
 
   // 수정 모드: 기존 환자 데이터 로드
   useEffect(() => {
@@ -158,20 +164,29 @@ const PatientFormPage: React.FC = () => {
     setForm(prev => ({ ...prev, [field]: value }))
   }
 
-  const validate = (): string | null => {
-    if (!form.name.trim())        return '환자 이름을 입력하세요.'
-    if (!form.age || isNaN(Number(form.age)) || Number(form.age) <= 0)
-                                  return '올바른 나이를 입력하세요.'
-    if (!form.roomNumber.trim())  return '병실 번호를 입력하세요.'
-    if (diagnosisList.length === 0) return '진단명을 하나 이상 입력하세요.'
-    if (!form.assignedNurseId)    return '담당 간호사를 선택하세요.'
-    return null
+  const validate = (): boolean => {
+    const errors: { name?: string; roomNumber?: string; diagnosis?: string } = {}
+    if (!form.name.trim())          errors.name = '환자 이름을 입력하세요.'
+    if (!form.roomNumber.trim())    errors.roomNumber = '병실 번호를 입력하세요.'
+    if (diagnosisList.length === 0) errors.diagnosis = '진단명을 하나 이상 입력하세요.'
+    setFieldErrors(errors)
+    return Object.keys(errors).length === 0
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const err = validate()
-    if (err) { showError(err); return }
+
+    if (!validate()) return
+
+    // 나이 / 담당간호사 추가 검증 (인라인 처리 대상 아니지만 toast로 알림)
+    if (!form.age || isNaN(Number(form.age)) || Number(form.age) <= 0) {
+      showError('올바른 나이를 입력하세요.')
+      return
+    }
+    if (!form.assignedNurseId) {
+      showError('담당 간호사를 선택하세요.')
+      return
+    }
 
     setSubmitting(true)
 
@@ -213,6 +228,22 @@ const PatientFormPage: React.FC = () => {
       success(`✅ ${patient.name} 환자 정보가 수정되었습니다.`)
     } else {
       dispatch(addPatient(patient))
+
+      // 오늘 날짜 배정 생성 — 신규 환자를 포함한 전체 환자 목록 대상
+      const todayKey = new Date().toISOString().slice(0, 10)
+      const now = new Date()
+      const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+      const scheduleRows = scheduleSaved[monthKey] ?? []
+      const dateIndex = now.getDate() - 1
+
+      const updatedPatients = [...allPatients, patient]
+      const newAssignments = autoAssignPatients(
+        allNursesForAssign,
+        updatedPatients,
+        { scheduleRows, dateIndex },
+      )
+      dispatch(setAssignments({ date: todayKey, assignments: newAssignments }))
+
       success(`✅ ${patient.name} 환자가 등록되었습니다.`)
     }
 
@@ -274,6 +305,9 @@ const PatientFormPage: React.FC = () => {
                 onChange={e => handleChange('name', e.target.value)}
                 required
               />
+              {fieldErrors.name && (
+                <div style={{ fontSize: '12px', color: 'var(--color-danger)', marginTop: '4px' }}>{fieldErrors.name}</div>
+              )}
             </div>
 
             {/* 나이 */}
@@ -315,6 +349,9 @@ const PatientFormPage: React.FC = () => {
                 onChange={e => handleChange('roomNumber', e.target.value)}
                 required
               />
+              {fieldErrors.roomNumber && (
+                <div style={{ fontSize: '12px', color: 'var(--color-danger)', marginTop: '4px' }}>{fieldErrors.roomNumber}</div>
+              )}
             </div>
           </div>
         </div>
@@ -380,6 +417,9 @@ const PatientFormPage: React.FC = () => {
                   </span>
                 ))}
               </div>
+            )}
+            {fieldErrors.diagnosis && (
+              <div style={{ fontSize: '12px', color: 'var(--color-danger)', marginTop: '6px' }}>{fieldErrors.diagnosis}</div>
             )}
           </div>
 

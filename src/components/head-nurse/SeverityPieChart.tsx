@@ -17,12 +17,12 @@ interface SeverityPieChartProps {
 const SeverityPieChart: React.FC<SeverityPieChartProps> = ({ data, total }) => {
   return (
     <div style={{
-      background: '#FFFFFF', borderRadius: '10px',
+      background: 'var(--color-surface)', borderRadius: '10px',
       boxShadow: '0 2px 12px rgba(44,110,138,.09)', padding: '20px',
       display: 'flex', flexDirection: 'column',
     }}>
       <div style={{
-        fontSize: '11px', fontWeight: 700, color: '#6B8090',
+        fontSize: '11px', fontWeight: 700, color: 'var(--color-muted)',
         textTransform: 'uppercase', letterSpacing: '.6px', marginBottom: '14px',
       }}>
         🩺 환자 중증도 분포
@@ -60,8 +60,8 @@ const SeverityPieChart: React.FC<SeverityPieChartProps> = ({ data, total }) => {
           transform: 'translate(-50%, -50%)',
           textAlign: 'center', pointerEvents: 'none',
         }}>
-          <div style={{ fontSize: '18px', fontWeight: 700, color: '#1A2B38' }}>{total}</div>
-          <div style={{ fontSize: '10px', color: '#6B8090' }}>총 환자</div>
+          <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--color-text)' }}>{total}</div>
+          <div style={{ fontSize: '10px', color: 'var(--color-muted)' }}>총 환자</div>
         </div>
       </div>
 
@@ -70,10 +70,10 @@ const SeverityPieChart: React.FC<SeverityPieChartProps> = ({ data, total }) => {
         {data.map(item => (
           <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
             <div style={{ width: 10, height: 10, borderRadius: '50%', background: item.color, flexShrink: 0 }} />
-            <span style={{ color: '#6B8090', flex: 1 }}>
+            <span style={{ color: 'var(--color-muted)', flex: 1 }}>
               {item.name === 'High' ? 'High (위험)' : item.name === 'Medium' ? 'Medium (주의)' : 'Low (안정)'}
             </span>
-            <span style={{ fontWeight: 600, color: '#1A2B38' }}>
+            <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>
               {item.value}명 · {total > 0 ? Math.round((item.value / total) * 100) : 0}%
             </span>
           </div>

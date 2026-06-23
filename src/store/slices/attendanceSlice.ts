@@ -11,6 +11,9 @@ interface AttendanceRecord {
   leaveRequested?: boolean
   leaveStatus?: 'Pending' | 'Approved' | 'Denied'
   onBreak?: boolean
+  breakStart?: number
+  breakEnd?: number
+  earlyLeaveReason?: string
 }
 
 interface AttendanceState {
@@ -70,11 +73,36 @@ const attendanceSlice = createSlice({
       const rec = state.records.find(r => r.nurseId === nurseId && r.date === date)
       if (rec) rec.leaveStatus = status
     },
+    startBreak: (state, action: PayloadAction<{ nurseId: string; date: string }>) => {
+      const { nurseId, date } = action.payload
+      const rec = state.records.find(r => r.nurseId === nurseId && r.date === date)
+      // checkIn 없으면 무시
+      if (!rec || rec.checkIn == null) return
+      rec.onBreak = true
+      rec.breakStart = Date.now()
+    },
+    endBreak: (state, action: PayloadAction<{ nurseId: string; date: string }>) => {
+      const { nurseId, date } = action.payload
+      const rec = state.records.find(r => r.nurseId === nurseId && r.date === date)
+      if (!rec) return
+      rec.onBreak = false
+      rec.breakEnd = Date.now()
+    },
+    requestEarlyLeave: (state, action: PayloadAction<{ nurseId: string; date: string; reason: string }>) => {
+      const { nurseId, date, reason } = action.payload
+      const rec = state.records.find(r => r.nurseId === nurseId && r.date === date)
+      if (rec) {
+        rec.checkoutRequested = true
+        rec.earlyLeaveReason = reason
+      } else {
+        state.records.push({ nurseId, date, checkoutRequested: true, earlyLeaveReason: reason })
+      }
+    },
     // set entire records (used for hydration)
     setRecords: (state, action: PayloadAction<AttendanceRecord[]>) => {
       state.records = action.payload
     },
   },
 })
-export const { checkIn, requestCheckout, approveCheckout, checkOut, requestLeave, setOnBreak, clearOnBreak, setLeaveStatus, setRecords } = attendanceSlice.actions
+export const { checkIn, requestCheckout, approveCheckout, checkOut, requestLeave, setOnBreak, clearOnBreak, setLeaveStatus, startBreak, endBreak, requestEarlyLeave, setRecords } = attendanceSlice.actions
 export default attendanceSlice.reducer

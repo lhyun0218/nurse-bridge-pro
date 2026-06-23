@@ -3,18 +3,21 @@ import { motion } from 'framer-motion'
 import {
   LuLogIn, LuLogOut, LuClock, LuCalendar, LuCircleCheck,
   LuSun, LuSunset, LuMoon, LuChevronLeft, LuChevronRight,
+  LuCoffee, LuX,
 } from 'react-icons/lu'
 import { useAppDispatch } from '../hooks/useAppDispatch'
 import { useAppSelector } from '../hooks/useAppSelector'
-import { checkIn, requestCheckout, checkOut, setRecords } from '../store/slices/attendanceSlice'
+import { checkIn, checkOut, setRecords, startBreak, endBreak, requestEarlyLeave } from '../store/slices/attendanceSlice'
 import { addNotification } from '../store/slices/notificationsSlice'
 import broadcast from '../utils/broadcast'
+import { SHIFT_TIMES, isOnTimeDeparture } from '../constants/shiftTimes'
+import type { ShiftType } from '../types'
 
 /* ── shift meta ── */
 const SHIFT_META = {
-  Day:     { label: '데이',   icon: LuSun,     color: '#2C6E8A', bg: '#EAF4F9', time: '06:00 – 15:00' },
-  Evening: { label: '이브닝', icon: LuSunset,  color: '#D4860A', bg: '#FEF3E2', time: '15:00 – 23:00' },
-  Night:   { label: '나이트', icon: LuMoon,    color: '#3F51B5', bg: '#EEF0FB', time: '23:00 – 06:00' },
+  Day:     { label: '데이',   icon: LuSun,     color: '#2C6E8A', bg: '#EAF4F9', time: `${SHIFT_TIMES.Day.workStart} – ${SHIFT_TIMES.Day.workEnd}` },
+  Evening: { label: '이브닝', icon: LuSunset,  color: '#D4860A', bg: '#FEF3E2', time: `${SHIFT_TIMES.Evening.workStart} – ${SHIFT_TIMES.Evening.workEnd}` },
+  Night:   { label: '나이트', icon: LuMoon,    color: '#3F51B5', bg: '#EEF0FB', time: `${SHIFT_TIMES.Night.workStart} – ${SHIFT_TIMES.Night.workEnd}` },
 }
 
 function fmtTime(ts?: number) {
@@ -46,6 +49,9 @@ const AttendancePage: React.FC = () => {
   const [calYear,  setCalYear]  = useState(now.getFullYear())
   const [calMonth, setCalMonth] = useState(now.getMonth()) // 0-indexed
 
+  /* 조기 퇴근 모달 */
+  const [showEarlyLeaveModal, setShowEarlyLeaveModal] = useState(false)
+
   if (!currentUser) return <div style={{ padding: 24 }}>로그인이 필요합니다.</div>
 
   const shiftKey = (currentUser.shiftType ?? 'Day') as keyof typeof SHIFT_META
@@ -54,9 +60,13 @@ const AttendancePage: React.FC = () => {
 
   /* status */
   const checkedIn      = !!todayRec?.checkIn
+  const onBreak        = !!todayRec?.onBreak
   const checkoutReqd   = !!todayRec?.checkoutRequested
   const checkoutApprv  = !!todayRec?.checkoutApproved
   const checkedOut     = !!todayRec?.checkOut
+
+  /* 정시 퇴근 여부 */
+  const onTime = isOnTimeDeparture(shiftKey as ShiftType)
 
   const fireAttEvent = (type: string) => {
     // 다른 탭(수간호사 등)에만 broadcast — 같은 탭은 Redux dispatch로 이미 처리됨
@@ -68,20 +78,25 @@ const AttendancePage: React.FC = () => {
     fireAttEvent('attendance:checkin')
   }
 
-  const handleRequestCheckout = () => {
-    dispatch(requestCheckout({ nurseId: currentUser.id, date: today }))
-    fetch('/api/attendance/checkout', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nurseId: currentUser.id, shiftType: currentUser.shiftType }),
-    }).catch(() => {})
-    const nid = `notif-checkout-${Date.now()}`
-    dispatch(addNotification({ id: nid, type: 'info', title: '퇴근 신청', message: '수간호사님께 퇴근 승인을 요청했습니다.', timestamp: Date.now() }))
-    fireAttEvent('attendance:request')
+  const handleStartBreak = () => {
+    dispatch(startBreak({ nurseId: currentUser.id, date: today }))
+  }
+
+  const handleEndBreak = () => {
+    dispatch(endBreak({ nurseId: currentUser.id, date: today }))
   }
 
   const handleCheckOut = () => {
     dispatch(checkOut({ nurseId: currentUser.id, date: today }))
     fireAttEvent('attendance:checkout')
+  }
+
+  const handleEarlyLeaveSubmit = (reason: string) => {
+    dispatch(requestEarlyLeave({ nurseId: currentUser.id, date: today, reason }))
+    const nid = `notif-earlyleave-${Date.now()}`
+    dispatch(addNotification({ id: nid, type: 'info', title: '조기 퇴근 신청', message: '수간호사님께 조기 퇴근 승인을 요청했습니다.', timestamp: Date.now() }))
+    broadcast.send('attendance:request', { nurseId: currentUser.id, date: today })
+    setShowEarlyLeaveModal(false)
   }
 
   return (
@@ -91,9 +106,17 @@ const AttendancePage: React.FC = () => {
       transition={{ duration: 0.28 }}
       style={{ padding: '22px 24px 60px', maxWidth: 960, margin: '0 auto' }}
     >
+      {/* ── 조기 퇴근 모달 ── */}
+      {showEarlyLeaveModal && (
+        <EarlyLeaveModal
+          onSubmit={handleEarlyLeaveSubmit}
+          onClose={() => setShowEarlyLeaveModal(false)}
+        />
+      )}
+
       {/* ── Header ── */}
       <div style={{ marginBottom: 24 }}>
-        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>출근 · 퇴근</h2>
+        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>근태</h2>
         <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--color-muted)' }}>
           {new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}
         </p>
@@ -140,7 +163,7 @@ const AttendancePage: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {[
               { label: '출근', icon: LuLogIn,     value: fmtTime(todayRec?.checkIn), done: checkedIn },
-              { label: '퇴근 신청', icon: LuClock, value: checkoutReqd ? (checkoutApprv ? '승인됨' : '대기 중') : '—', done: checkoutApprv, warn: checkoutReqd && !checkoutApprv },
+              { label: '휴게', icon: LuCoffee, value: todayRec?.breakStart ? (todayRec?.breakEnd ? `${fmtTime(todayRec.breakStart)}~${fmtTime(todayRec.breakEnd)}` : `${fmtTime(todayRec.breakStart)} 시작`) : '—', done: !!todayRec?.breakEnd, warn: onBreak },
               { label: '퇴근', icon: LuLogOut,    value: fmtTime(todayRec?.checkOut), done: checkedOut },
             ].map(row => (
               <div key={row.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -162,7 +185,8 @@ const AttendancePage: React.FC = () => {
       </div>
 
       {/* ── Action buttons ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 32 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginBottom: 16 }}>
+        {/* 출근 버튼 */}
         <ActionBtn
           icon={LuLogIn}
           label="출근"
@@ -174,27 +198,93 @@ const AttendancePage: React.FC = () => {
           doneLabel={checkedIn ? `${fmtTime(todayRec?.checkIn)} 출근` : undefined}
           onClick={handleCheckIn}
         />
+        {/* 정시 퇴근 버튼 또는 조기 퇴근 신청 버튼 */}
+        {(!checkoutReqd && !checkedOut) ? (
+          onTime ? (
+            <ActionBtn
+              icon={LuLogOut}
+              label="퇴근"
+              sub="퇴근 시간 기록"
+              color="#C0392B"
+              bg="#FDECEA"
+              disabled={!checkedIn || checkedOut}
+              done={checkedOut}
+              doneLabel={checkedOut ? `${fmtTime(todayRec?.checkOut)} 퇴근` : undefined}
+              onClick={handleCheckOut}
+            />
+          ) : (
+            <ActionBtn
+              icon={LuClock}
+              label="조기 퇴근 신청"
+              sub="수간호사 승인 요청"
+              color="#D4860A"
+              bg="#FEF3E2"
+              disabled={!checkedIn}
+              done={false}
+              onClick={() => setShowEarlyLeaveModal(true)}
+            />
+          )
+        ) : checkedOut ? (
+          <ActionBtn
+            icon={LuLogOut}
+            label="퇴근"
+            sub="퇴근 시간 기록"
+            color="#C0392B"
+            bg="#FDECEA"
+            disabled={true}
+            done={true}
+            doneLabel={`${fmtTime(todayRec?.checkOut)} 퇴근`}
+            onClick={() => {}}
+          />
+        ) : checkoutApprv ? (
+          <ActionBtn
+            icon={LuLogOut}
+            label="퇴근"
+            sub="퇴근 시간 기록"
+            color="#C0392B"
+            bg="#FDECEA"
+            disabled={false}
+            done={false}
+            onClick={handleCheckOut}
+          />
+        ) : (
+          <ActionBtn
+            icon={LuClock}
+            label="조기 퇴근 신청"
+            sub="승인 대기 중"
+            color="#D4860A"
+            bg="#FEF3E2"
+            disabled={true}
+            done={false}
+            doneLabel="승인 대기 중"
+            onClick={() => {}}
+          />
+        )}
+      </div>
+
+      {/* ── 휴게 버튼 ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginBottom: 32 }}>
         <ActionBtn
-          icon={LuClock}
-          label="퇴근 신청"
-          sub="수간호사 승인 요청"
-          color="#D4860A"
-          bg="#FEF3E2"
-          disabled={checkoutReqd || !checkedIn}
-          done={checkoutApprv}
-          doneLabel={checkoutApprv ? '퇴근 승인됨' : checkoutReqd ? '승인 대기 중' : undefined}
-          onClick={handleRequestCheckout}
+          icon={LuCoffee}
+          label="휴게 시작"
+          sub="휴게 시간 기록"
+          color="#7B5EA7"
+          bg="#F3EEF9"
+          disabled={!checkedIn || onBreak || checkedOut}
+          done={onBreak}
+          doneLabel={onBreak ? `${fmtTime(todayRec?.breakStart)} 시작` : undefined}
+          onClick={handleStartBreak}
         />
         <ActionBtn
-          icon={LuLogOut}
-          label="퇴근"
-          sub="퇴근 시간 기록"
-          color="#C0392B"
-          bg="#FDECEA"
-          disabled={checkedOut || !checkoutApprv}
-          done={checkedOut}
-          doneLabel={checkedOut ? `${fmtTime(todayRec?.checkOut)} 퇴근` : undefined}
-          onClick={handleCheckOut}
+          icon={LuCoffee}
+          label="휴게 종료"
+          sub="업무 복귀"
+          color="#5C6BC0"
+          bg="#EEF0FB"
+          disabled={!onBreak || checkedOut}
+          done={!!todayRec?.breakEnd && !onBreak}
+          doneLabel={todayRec?.breakEnd && !onBreak ? `${fmtTime(todayRec?.breakEnd)} 종료` : undefined}
+          onClick={handleEndBreak}
         />
       </div>
 
@@ -205,25 +295,26 @@ const AttendancePage: React.FC = () => {
         marginBottom: 32,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-          {(['출근', '퇴근 신청', '수간호사 승인', '퇴근'] as const).map((step, i) => {
-            const done = [checkedIn, checkoutReqd, checkoutApprv, checkedOut][i]
+          {(['출근', '휴게', '퇴근'] as const).map((step, i) => {
+            const done = [checkedIn, !!todayRec?.breakEnd, checkedOut][i]
+            const active = [false, onBreak, checkoutReqd && !checkedOut][i]
             return (
               <React.Fragment key={step}>
                 <div style={{ flex: 1, textAlign: 'center' }}>
                   <div style={{
                     width: 28, height: 28, borderRadius: '50%', margin: '0 auto 6px',
-                    background: done ? '#2E7D5E' : 'var(--color-bg)',
-                    border: `2px solid ${done ? '#2E7D5E' : 'var(--color-border)'}`,
+                    background: done ? '#2E7D5E' : active ? '#D4860A' : 'var(--color-bg)',
+                    border: `2px solid ${done ? '#2E7D5E' : active ? '#D4860A' : 'var(--color-border)'}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     {done
                       ? <LuCircleCheck style={{ width: 14, height: 14, color: '#fff' }} />
-                      : <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-muted)' }}>{i + 1}</span>
+                      : <span style={{ fontSize: 11, fontWeight: 700, color: active ? '#D4860A' : 'var(--color-muted)' }}>{i + 1}</span>
                     }
                   </div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: done ? '#2E7D5E' : 'var(--color-muted)' }}>{step}</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: done ? '#2E7D5E' : active ? '#D4860A' : 'var(--color-muted)' }}>{step}</div>
                 </div>
-                {i < 3 && (
+                {i < 2 && (
                   <div style={{
                     height: 2, width: 24, flexShrink: 0,
                     background: done ? '#2E7D5E' : 'var(--color-border)',
@@ -252,6 +343,104 @@ const AttendancePage: React.FC = () => {
         }}
       />
     </motion.div>
+  )
+}
+
+/* ── EarlyLeaveModal component ── */
+interface EarlyLeaveModalProps {
+  onSubmit: (reason: string) => void
+  onClose: () => void
+}
+
+const EarlyLeaveModal: React.FC<EarlyLeaveModalProps> = ({ onSubmit, onClose }) => {
+  const [reason, setReason] = React.useState('')
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 1000,
+      background: 'rgba(0,0,0,0.45)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 24,
+    }}>
+      <div style={{
+        background: 'var(--color-surface)',
+        borderRadius: 16, padding: '28px 28px 24px',
+        width: '100%', maxWidth: 420,
+        boxShadow: '0 8px 40px rgba(0,0,0,0.22)',
+        position: 'relative',
+      }}>
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute', top: 14, right: 14,
+            width: 30, height: 30, borderRadius: 8,
+            border: '1px solid var(--color-border)',
+            background: 'var(--color-bg)', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'var(--color-muted)',
+          }}
+        >
+          <LuX style={{ width: 15, height: 15 }} />
+        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+          <div style={{
+            width: 38, height: 38, borderRadius: 10,
+            background: '#FEF3E2', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <LuClock style={{ width: 18, height: 18, color: '#D4860A' }} />
+          </div>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text)' }}>조기 퇴근 신청</div>
+            <div style={{ fontSize: 12, color: 'var(--color-muted)' }}>수간호사 승인 후 퇴근 가능</div>
+          </div>
+        </div>
+        <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', display: 'block', marginBottom: 8 }}>
+          조기 퇴근 사유 <span style={{ color: '#C0392B' }}>*</span>
+        </label>
+        <textarea
+          value={reason}
+          onChange={e => setReason(e.target.value)}
+          placeholder="조기 퇴근이 필요한 사유를 입력해주세요."
+          rows={4}
+          style={{
+            width: '100%', boxSizing: 'border-box',
+            padding: '12px 14px', borderRadius: 10,
+            border: '1.5px solid var(--color-border)',
+            background: 'var(--color-bg)',
+            fontSize: 13, color: 'var(--color-text)',
+            resize: 'vertical', outline: 'none',
+            fontFamily: 'inherit',
+          }}
+        />
+        <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
+          <button
+            onClick={onClose}
+            style={{
+              flex: 1, padding: '11px 0', borderRadius: 9,
+              border: '1px solid var(--color-border)',
+              background: 'var(--color-bg)',
+              fontSize: 13, fontWeight: 600,
+              color: 'var(--color-text)', cursor: 'pointer',
+            }}
+          >
+            취소
+          </button>
+          <button
+            onClick={() => { if (reason.trim()) onSubmit(reason.trim()) }}
+            disabled={!reason.trim()}
+            style={{
+              flex: 2, padding: '11px 0', borderRadius: 9,
+              border: 'none',
+              background: reason.trim() ? '#D4860A' : 'var(--color-border)',
+              fontSize: 13, fontWeight: 700,
+              color: '#fff', cursor: reason.trim() ? 'pointer' : 'not-allowed',
+              transition: 'background 0.15s',
+            }}
+          >
+            신청하기
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -346,7 +535,7 @@ const AttendanceCalendar: React.FC<CalendarProps> = ({ nurseId, records, year, m
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <LuCalendar style={{ width: 18, height: 18, color: 'var(--color-muted)' }} />
-          <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text)' }}>출석 달력</span>
+          <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text)' }}>근태 달력</span>
           <span style={{ fontSize: 13, color: 'var(--color-muted)' }}>{monthLabel}</span>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>

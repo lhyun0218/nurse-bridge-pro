@@ -33,7 +33,7 @@ const MyPatientsPage: React.FC = () => {
             borderRadius: '50%', animation: 'spin 0.8s linear infinite',
             margin: '0 auto 12px',
           }} />
-          <p style={{ color: '#6B8090', fontSize: '14px' }}>환자 목록 로딩 중...</p>
+          <p style={{ color: 'var(--color-muted)', fontSize: '14px' }}>환자 목록 로딩 중...</p>
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
@@ -83,9 +83,9 @@ const MyPatientsPage: React.FC = () => {
           <span style={{ fontSize: '12px', color: '#2E7D5E', marginTop: '2px' }}>🟢 Low</span>
         </div>
         {/* Todo 완료율 */}
-        <div style={summaryCardStyle('#F0F4F7', '#6B8090')}>
-          <span style={{ fontSize: '22px', fontWeight: 800, color: '#1A2B38' }}>{overallRate}%</span>
-          <span style={{ fontSize: '12px', color: '#6B8090', marginTop: '2px' }}>
+        <div style={summaryCardStyle('#F0F4F7', 'var(--color-muted)')}>
+          <span style={{ fontSize: '22px', fontWeight: 800, color: 'var(--color-text)' }}>{overallRate}%</span>
+          <span style={{ fontSize: '12px', color: 'var(--color-muted)', marginTop: '2px' }}>
             Todo 완료 ({doneCount}/{totalTasks})
           </span>
         </div>

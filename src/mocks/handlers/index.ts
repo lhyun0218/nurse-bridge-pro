@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw'
-import { mockNurses, mockPatients, mockTasks, mockInventory, mockPrescriptions } from '../../data/mockData'
+import { mockNurses, mockPatients, mockTasks, mockPrescriptions } from '../../data/mockData'
 import { autoAssignPatients } from '../../utils/autoAssignPatients'
 
 // ── Attendance 헬퍼: Redux persist 키('nb:persist:v1')와 동일한 저장소를 사용 ──
@@ -79,11 +79,7 @@ export const handlers = [
     return HttpResponse.json(task)
   }),
 
-  // ── 재고 ──────────────────────────────────
-  http.get('/api/inventory', () => {
-    return HttpResponse.json(mockInventory)
-  }),
-  // 출석/퇴근
+  // ── 근태 ──────────────────────────────────────
   http.post('/api/attendance/checkout', async ({ request }) => {
     const body = await request.json() as any
     const nurse = mockNurses.find(n => n.id === body.nurseId)
@@ -119,20 +115,6 @@ export const handlers = [
     writeAttendanceRecords(records)
     return HttpResponse.json({ success: true })
   }),
-  http.patch('/api/inventory/:itemId/consume', async ({ params, request }) => {
-    const body = await request.json() as { amount: number }
-    const item = mockInventory.find(i => i.itemId === params.itemId)
-    if (!item) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
-    item.quantity = Math.max(0, item.quantity - body.amount)
-    item.status = item.quantity === 0 ? 'critical' : item.quantity < item.reorderPoint ? 'warning' : 'sufficient'
-    return HttpResponse.json(item)
-  }),
-  http.post('/api/inventory/:itemId/request', ({ params }) => {
-    const item = mockInventory.find(i => i.itemId === params.itemId)
-    if (!item) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
-    return HttpResponse.json({ success: true, message: `${item.itemName} 청구 요청이 전송되었습니다.` })
-  }),
-
   // ── 처방 ──────────────────────────────────────
   http.get('/api/prescriptions', ({ request }) => {
     const params = new URL(request.url).searchParams

@@ -19,7 +19,7 @@ interface VitalSignsGridProps {
 function getValueColor(isAbnormal?: boolean, isBorderline?: boolean): string {
   if (isAbnormal) return '#C0392B'
   if (isBorderline) return '#D4860A'
-  return '#1A2B38'
+  return 'var(--color-text)'
 }
 
 function buildItems(v: VitalSigns): VitalItem[] {
@@ -171,7 +171,7 @@ const VitalSignsGrid: React.FC<VitalSignsGridProps> = ({ vitalSigns: v, isRealti
           <span style={{ fontSize: '11px', fontWeight: 700, color: '#2E7D5E', letterSpacing: '0.4px' }}>
             실시간 모니터링
           </span>
-          <span style={{ fontSize: '10px', color: '#6B8090' }}>· 5초마다 업데이트</span>
+          <span style={{ fontSize: '10px', color: 'var(--color-muted)' }}>· 5초마다 업데이트</span>
         </div>
       )}
 

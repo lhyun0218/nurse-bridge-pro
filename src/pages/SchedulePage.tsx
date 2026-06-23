@@ -4,6 +4,7 @@ import { LuDownload, LuFileSpreadsheet, LuWand } from 'react-icons/lu'
 import { useAppSelector } from '../hooks/useAppSelector'
 import { exportScheduleToExcel } from '../utils/exportScheduleExcel'
 import type { ShiftType } from '../types'
+import { SHIFT_TIMES } from '../constants/shiftTimes'
 
 // ── 타입 ──────────────────────────────────────────────────────────────────
 interface DaySchedule {
@@ -17,7 +18,7 @@ const SHIFT_CONFIG: Record<ShiftType | 'Off', { label: string; bg: string; color
   Day:     { label: 'D',  bg: 'rgba(44,110,138,0.12)',  color: '#2C6E8A', border: '#2C6E8A' },
   Evening: { label: 'E',  bg: 'rgba(212,134,10,0.12)',  color: '#D4860A', border: '#D4860A' },
   Night:   { label: 'N',  bg: 'rgba(63,81,181,0.12)',   color: '#3F51B5', border: '#3F51B5' },
-  Off:     { label: '휴', bg: 'rgba(107,128,144,0.08)', color: '#6B8090', border: 'transparent' },
+  Off:     { label: '휴', bg: 'rgba(107,128,144,0.08)', color: 'var(--color-muted)', border: 'transparent' },
 }
 
 const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
@@ -348,9 +349,14 @@ const SchedulePage: React.FC = () => {
                   {cfg.label}
                 </span>
                 <span style={{ fontSize: '11px', color: 'var(--color-muted)' }}>
-                  {shift === 'Day' ? '주간 (06~15시)' :
-                   shift === 'Evening' ? '저녁 (14~23시)' :
-                   shift === 'Night' ? '야간 (22~07시)' : '휴무'}
+                  {shift === 'Off'
+                    ? '휴무'
+                    : (() => {
+                        const LABEL: Record<ShiftType, string> = { Day: '주간', Evening: '저녁', Night: '야간' }
+                        const s = shift as ShiftType
+                        return `${LABEL[s]} (${SHIFT_TIMES[s].workStart}~${SHIFT_TIMES[s].workEnd})`
+                      })()
+                  }
                 </span>
               </div>
             )
@@ -497,10 +503,8 @@ const SchedulePage: React.FC = () => {
               const cfg = SHIFT_CONFIG[d.shift]
               const dayOfWeek = new Date(viewYear, viewMonth - 1, d.date).getDay()
               const weekdayLabel = WEEKDAY_LABELS[dayOfWeek]
-              const shiftTime =
-                d.shift === 'Day'     ? '06:00 ~ 15:00' :
-                d.shift === 'Evening' ? '14:00 ~ 23:00' :
-                                        '22:00 ~ 07:00'
+              const shiftType = d.shift as ShiftType
+              const shiftTime = `${SHIFT_TIMES[shiftType].workStart} ~ ${SHIFT_TIMES[shiftType].workEnd}`
               return (
                 <div
                   key={d.date}

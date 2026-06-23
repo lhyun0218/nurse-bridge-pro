@@ -24,7 +24,7 @@ function AttendanceToastBanner({ toasts, onDismiss }: { toasts: AttendanceToast[
     checkin:  { bg: '#E8F5EE', border: '#2E7D5E', color: '#2E7D5E', icon: '🟢' },
     request:  { bg: '#FEF3E2', border: '#D4860A', color: '#D4860A', icon: '⏳' },
     approve:  { bg: '#EAF4F9', border: '#2C6E8A', color: '#2C6E8A', icon: '✅' },
-    checkout: { bg: '#F0F4F7', border: '#6B8090', color: '#6B8090', icon: '🔵' },
+    checkout: { bg: '#F0F4F7', border: 'var(--color-muted)', color: 'var(--color-muted)', icon: '🔵' },
   }
   if (toasts.length === 0) return null
   return (

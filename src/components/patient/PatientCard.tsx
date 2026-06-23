@@ -127,7 +127,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, tasks }) => {
           const nurse = aid ? nurses.find(n => n.id === aid) : undefined
           return (
             <div key={shift} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: '#6B8090' }}>{shift[0]}</div>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-muted)' }}>{shift[0]}</div>
               <div style={{ fontSize: '12px', color: nurse ? 'var(--color-text)' : 'var(--color-muted)', padding: '4px 8px', borderRadius: '999px', border: '1px solid var(--color-border)', background: nurse ? '#F7FBFC' : 'transparent' }}>
                 {nurse ? nurse.name : '미배정'}
               </div>

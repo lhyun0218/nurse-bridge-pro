@@ -13,7 +13,7 @@ const catStyles: Record<TaskCategory, { bg: string; color: string; label: string
   Monitoring:    { bg: '#EBF4F8', color: '#2C6E8A', label: '모니터링' },
   Medication:    { bg: '#FEF3E2', color: '#D4860A', label: '투약' },
   Hygiene:       { bg: '#E8F5EE', color: '#2E7D5E', label: '위생' },
-  Documentation: { bg: '#F0F4F7', color: '#6B8090', label: '기록' },
+  Documentation: { bg: '#F0F4F7', color: 'var(--color-muted)', label: '기록' },
 }
 
 const severityColor: Record<Severity, string> = {
@@ -74,7 +74,7 @@ const TodoPage: React.FC = () => {
             borderRadius: '50%', animation: 'spin 0.8s linear infinite',
             margin: '0 auto 12px',
           }} />
-          <p style={{ color: '#6B8090', fontSize: '14px' }}>할 일 목록 로딩 중...</p>
+          <p style={{ color: 'var(--color-muted)', fontSize: '14px' }}>할 일 목록 로딩 중...</p>
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>

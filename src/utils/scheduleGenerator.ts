@@ -402,5 +402,5 @@ export const SHIFT_COLOR: Record<ShiftCode, { bg: string; text: string; border: 
   D:   { bg: 'rgba(44,110,138,0.12)',  text: '#2C6E8A', border: '#2C6E8A' },
   E:   { bg: 'rgba(212,134,10,0.12)',  text: '#D4860A', border: '#D4860A' },
   N:   { bg: 'rgba(63,81,181,0.15)',   text: '#3F51B5', border: '#3F51B5' },
-  OFF: { bg: 'transparent',            text: '#6B8090', border: 'transparent' },
+  OFF: { bg: 'transparent',            text: 'var(--color-muted)', border: 'transparent' },
 }

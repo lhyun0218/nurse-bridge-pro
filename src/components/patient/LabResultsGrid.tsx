@@ -22,12 +22,12 @@ const LabResultsGrid: React.FC<LabResultsGridProps> = ({ labs }) => {
             alignItems: 'center',
           }}
         >
-          <div style={{ fontSize: '11px', color: '#6B8090' }}>{lab.name}</div>
+          <div style={{ fontSize: '11px', color: 'var(--color-muted)' }}>{lab.name}</div>
           <div
             style={{
               fontSize: '14px',
               fontWeight: 700,
-              color: lab.isAbnormal ? '#C0392B' : lab.isBorderline ? '#D4860A' : '#1A2B38',
+              color: lab.isAbnormal ? '#C0392B' : lab.isBorderline ? '#D4860A' : 'var(--color-text)',
             }}
           >
             {lab.value}

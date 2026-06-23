@@ -12,7 +12,7 @@ const catStyles: Record<TaskCategory, { bg: string; color: string; label: string
   Monitoring:    { bg: '#EBF4F8', color: '#2C6E8A', label: '모니터링' },
   Medication:    { bg: '#FEF3E2', color: '#D4860A', label: '투약' },
   Hygiene:       { bg: '#E8F5EE', color: '#2E7D5E', label: '위생' },
-  Documentation: { bg: '#F0F4F7', color: '#6B8090', label: '기록' },
+  Documentation: { bg: '#F0F4F7', color: 'var(--color-muted)', label: '기록' },
 }
 
 const TodoList: React.FC<TodoListProps> = ({ tasks }) => {
@@ -27,7 +27,7 @@ const TodoList: React.FC<TodoListProps> = ({ tasks }) => {
       {/* 완료율 */}
       <div style={{ marginBottom: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-          <span style={{ fontSize: '13px', fontWeight: 500, color: '#1A2B38' }}>완료율</span>
+          <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-text)' }}>완료율</span>
           <span style={{ fontSize: '13px', fontWeight: 700, color: '#2C6E8A' }}>
             {completed} / {total} ({rate}%)
           </span>
@@ -96,7 +96,7 @@ const TodoList: React.FC<TodoListProps> = ({ tasks }) => {
               {/* 업무명 */}
               <div
                 style={{
-                  flex: 1, fontSize: '13px', color: '#1A2B38',
+                  flex: 1, fontSize: '13px', color: 'var(--color-text)',
                   textDecoration: isDone ? 'line-through' : 'none',
                 }}
               >
@@ -117,7 +117,7 @@ const TodoList: React.FC<TodoListProps> = ({ tasks }) => {
               {/* 소요시간 */}
               <span
                 style={{
-                  fontSize: '11px', color: '#6B8090', whiteSpace: 'nowrap',
+                  fontSize: '11px', color: 'var(--color-muted)', whiteSpace: 'nowrap',
                   background: '#fff', padding: '2px 7px',
                   borderRadius: '5px', border: '1px solid #DDE3E8',
                 }}

@@ -4,7 +4,6 @@ import { Provider } from 'react-redux'
 import { store } from './store'
 import { setPatients } from './store/slices/patientsSlice'
 import { setTasks } from './store/slices/tasksSlice'
-import { setInventory } from './store/slices/inventorySlice'
 import { setNurses } from './store/slices/nursesSlice'
 import { setAssignments } from './store/slices/assignmentsSlice'
 import { setPrescriptions } from './store/slices/prescriptionsSlice'
@@ -29,21 +28,18 @@ async function enableMocking() {
 // 앱 시작 시 MSW API 호출로 Redux Store 초기화
 async function initializeStore() {
   try {
-    const [patientsRes, tasksRes, inventoryRes, nursesRes] = await Promise.all([
+    const [patientsRes, tasksRes, nursesRes] = await Promise.all([
       fetch('/api/patients'),
       fetch('/api/tasks'),
-      fetch('/api/inventory'),
       fetch('/api/nurses'),
     ])
-    const [patients, tasks, inventory, nurses] = await Promise.all([
+    const [patients, tasks, nurses] = await Promise.all([
       patientsRes.json(),
       tasksRes.json(),
-      inventoryRes.json(),
       nursesRes.json(),
     ])
     store.dispatch(setPatients(patients))
     store.dispatch(setTasks(tasks))
-    store.dispatch(setInventory(inventory))
     store.dispatch(setNurses(nurses))
     // 처방 데이터 로드
     try {

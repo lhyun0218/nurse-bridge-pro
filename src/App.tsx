@@ -7,7 +7,6 @@ import DashboardPage from './pages/DashboardPage'
 import MyPatientsPage from './pages/MyPatientsPage'
 import TodoPage from './pages/TodoPage'
 import PatientDetailPage from './pages/PatientDetailPage'
-import InventoryPage from './pages/InventoryPage'
 import HeadNursePage from './pages/HeadNursePage'
 import SchedulePage from './pages/SchedulePage'
 import PatientFormPage from './pages/PatientFormPage'
@@ -24,7 +23,6 @@ const PAGE_TITLES: Record<string, string> = {
   '/patients':                '내 담당 환자',
   '/todos':                   '오늘의 Todo',
   '/head-nurse':              '병동 관제',
-  '/inventory':               '물품 재고',
   '/schedule':                '근무 일정',
   '/patient':                 '환자 상세',
   '/head-nurse/patients/new': '신규 환자 등록',
@@ -62,16 +60,15 @@ export default function App() {
         <Route path="/todos"    element={<ProtectedRoute pageTitle={PAGE_TITLES['/todos']}><TodoPage /></ProtectedRoute>} />
 
         <Route path="/patient/:id" element={<ProtectedRoute pageTitle={PAGE_TITLES['/patient']}><PatientDetailPage /></ProtectedRoute>} />
-        <Route path="/inventory"   element={<ProtectedRoute pageTitle={PAGE_TITLES['/inventory']}><InventoryPage /></ProtectedRoute>} />
         <Route path="/schedule"    element={<ProtectedRoute pageTitle={PAGE_TITLES['/schedule']}><SchedulePage /></ProtectedRoute>} />
         <Route path="/colleagues"  element={<ProtectedRoute pageTitle="동료 현황"><ColleaguesPage /></ProtectedRoute>} />
         <Route path="/medication"  element={<ProtectedRoute pageTitle="투약 스케줄"><MedicationSchedulePage /></ProtectedRoute>} />
         <Route path="/handover"    element={<ProtectedRoute pageTitle="인수인계"><HandoverPage /></ProtectedRoute>} />
-        <Route path="/attendance"  element={<ProtectedRoute pageTitle="출석"><AttendancePage /></ProtectedRoute>} />
+        <Route path="/attendance"  element={<ProtectedRoute pageTitle="근태"><AttendancePage /></ProtectedRoute>} />
 
         {/* 수간호사 전용 라우트 */}
         <Route path="/head-nurse"                    element={<HeadNurseRoute><HeadNursePage /></HeadNurseRoute>} />
-        <Route path="/head-nurse/attendance"         element={<HeadNurseRoute pageTitle="출석 관리"><HeadNurseAttendancePage /></HeadNurseRoute>} />
+        <Route path="/head-nurse/attendance"         element={<HeadNurseRoute pageTitle="근태 관리"><HeadNurseAttendancePage /></HeadNurseRoute>} />
         <Route path="/head-nurse/patients/new"       element={<HeadNurseRoute pageTitle={PAGE_TITLES['/head-nurse/patients/new']}><PatientFormPage /></HeadNurseRoute>} />
         <Route path="/head-nurse/patients/:id/edit"  element={<HeadNurseRoute pageTitle="환자 정보 수정"><PatientFormPage /></HeadNurseRoute>} />
         <Route path="/head-nurse/schedule/generate"  element={<HeadNurseRoute pageTitle="근무표 자동 생성"><ScheduleGeneratorPage /></HeadNurseRoute>} />

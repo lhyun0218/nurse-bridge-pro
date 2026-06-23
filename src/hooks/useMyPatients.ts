@@ -10,13 +10,15 @@ export function useMyPatients() {
   })()
   const assignsToday = useAppSelector(s => s.assignments.byDate[todayKey] ?? {})
 
-  const shiftKey = currentUser?.shiftType ?? 'Day'
-
   const myPatients = allPatients
     .filter(p => {
       const a = assignsToday[p.id]
-      if (!a) return false
-      return Object.values(a).includes(currentUser?.id ?? '') || (a[shiftKey] === currentUser?.id)
+      if (a) {
+        // assignments가 있으면 Day/Evening/Night 중 현재 유저가 포함된 경우
+        return Object.values(a).includes(currentUser?.id ?? '')
+      }
+      // assignments 미로드 시 patient.assignedNurseId fallback
+      return p.assignedNurseId === (currentUser?.id ?? '')
     })
     .sort((a, b) => {
       const order: Record<string, number> = { High: 0, Medium: 1, Low: 2 }

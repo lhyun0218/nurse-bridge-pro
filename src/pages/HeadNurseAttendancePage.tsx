@@ -17,6 +17,8 @@ interface AttendanceRecord {
   checkIn?: number; checkOut?: number
   checkoutRequested?: boolean; checkoutApproved?: boolean
   leaveRequested?: boolean; leaveStatus?: 'Pending' | 'Approved' | 'Denied'
+  onBreak?: boolean; breakStart?: number; breakEnd?: number
+  earlyLeaveReason?: string
 }
 
 /* ── shift meta ── */
@@ -125,7 +127,7 @@ const HeadNurseAttendancePage: React.FC = () => {
       {/* ── Header ── */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>출석 관리</h2>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>근태 관리</h2>
           <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--color-muted)' }}>
             {new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}
           </p>
@@ -152,7 +154,7 @@ const HeadNurseAttendancePage: React.FC = () => {
           { label: '전체 간호사',  value: stats.total,     icon: LuUsers,        color: '#2C6E8A', bg: '#EAF4F9' },
           { label: '오늘 출근',    value: stats.checkedIn,  icon: LuLogIn,        color: '#2E7D5E', bg: '#E8F5EE' },
           { label: '퇴근 요청',   value: stats.pending,    icon: LuClock,        color: '#D4860A', bg: '#FEF3E2' },
-          { label: '퇴근 승인',   value: stats.approved,   icon: LuCircleCheck, color: '#6B8090', bg: 'var(--color-bg)' },
+          { label: '퇴근 승인',   value: stats.approved,   icon: LuCircleCheck, color: 'var(--color-muted)', bg: 'var(--color-bg)' },
         ].map(s => {
           const Icon = s.icon
           return (
@@ -315,11 +317,27 @@ const HeadNurseAttendancePage: React.FC = () => {
                 </div>
                 <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
                   <TimeItem icon={LuLogIn}  label="출근" value={fmtTime(r.checkIn)} />
+                  {r.breakStart && (
+                    <TimeItem
+                      icon={LuClock}
+                      label="휴게"
+                      value={r.breakEnd ? `${fmtTime(r.breakStart)}~${fmtTime(r.breakEnd)}` : `${fmtTime(r.breakStart)} 중`}
+                    />
+                  )}
                   <TimeItem icon={LuLogOut} label="퇴근" value={fmtTime(r.checkOut)} />
                   {r.checkoutRequested && (
                     <TimeItem icon={LuClock} label="퇴근신청" value={r.checkoutApproved ? '승인됨' : '대기 중'} highlight={isPending} />
                   )}
                 </div>
+                {isPending && r.earlyLeaveReason && (
+                  <div style={{
+                    marginTop: 6, fontSize: 12, color: '#D4860A',
+                    background: '#FEF3E2', borderRadius: 6, padding: '4px 10px',
+                    display: 'inline-block', maxWidth: '100%',
+                  }}>
+                    💬 조기퇴근 사유: {r.earlyLeaveReason}
+                  </div>
+                )}
               </div>
 
               {/* Action buttons */}
@@ -426,7 +444,7 @@ const MonthlyOverview: React.FC<MonthlyOverviewProps> = ({ records, nurses, year
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <LuCalendar style={{ width: 18, height: 18, color: 'var(--color-muted)' }} />
-          <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text)' }}>월별 출석 현황</span>
+          <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text)' }}>월별 근태 현황</span>
           <span style={{ fontSize: 13, color: 'var(--color-muted)' }}>{monthLabel} · {nurses.length}명</span>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>

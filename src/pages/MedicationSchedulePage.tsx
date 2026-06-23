@@ -10,6 +10,45 @@ import { useAppSelector } from '../hooks/useAppSelector'
 import { setPatients } from '../store/slices/patientsSlice'
 import { getMedicationCountdown } from '../hooks/useMedicationTimer'
 import { verifyPrescription, discontinuePrescription } from '../store/slices/prescriptionsSlice'
+import { toggleTask } from '../store/slices/tasksSlice'
+import type { Prescription } from '../types'
+
+// ── 다음 투여 예정 시각 계산 ──────────────────────────────────────────────────
+function parseIntervalMinutesLocal(frequency: string): number | null {
+  const f = frequency.toUpperCase().trim()
+  const qhMatch = f.match(/Q(\d+)H/)
+  if (qhMatch) return parseInt(qhMatch[1], 10) * 60
+  if (f.includes('QD'))  return 24 * 60
+  if (f.includes('BID')) return 12 * 60
+  if (f.includes('TID')) return 8 * 60
+  if (f.includes('QID')) return 6 * 60
+  return null
+}
+
+/**
+ * calcNextDoseTime
+ * frequency 문자열을 파싱하여 다음 투여 예정 시각(HH:MM 문자열)을 반환한다.
+ * PRN / 지속 투약처럼 interval을 계산할 수 없으면 null을 반환한다.
+ */
+export function calcNextDoseTime(prescription: Prescription): string | null {
+  const interval = parseIntervalMinutesLocal(prescription.medication.frequency)
+  if (interval === null) return null
+
+  const now = new Date()
+  // 오늘 06:00 기준점 (근무 시작)
+  const base = new Date(now)
+  base.setHours(6, 0, 0, 0)
+
+  const elapsedMs  = now.getTime() - base.getTime()
+  const intervalMs = interval * 60 * 1000
+  const remainder  = ((elapsedMs % intervalMs) + intervalMs) % intervalMs
+  const msUntilNext = intervalMs - remainder
+
+  const nextDose = new Date(now.getTime() + msUntilNext)
+  const hh = String(nextDose.getHours()).padStart(2, '0')
+  const mm = String(nextDose.getMinutes()).padStart(2, '0')
+  return `${hh}:${mm}`
+}
 
 const ROUTE_STYLE: Record<string, { bg: string; color: string; label: string }> = {
   IV:    { bg: '#FEF3E2', color: '#D4860A', label: 'IV 정맥' },
@@ -18,7 +57,7 @@ const ROUTE_STYLE: Record<string, { bg: string; color: string; label: string }> 
   NEB:   { bg: '#EEF0FB', color: '#3F51B5', label: '흡입' },
   O2:    { bg: '#EBF4F8', color: '#2C6E8A', label: '산소' },
   IM:    { bg: '#F0EBF8', color: '#6B3FA0', label: 'IM 근육' },
-  Other: { bg: '#F0F4F7', color: '#6B8090', label: '기타' },
+  Other: { bg: '#F0F4F7', color: 'var(--color-muted)', label: '기타' },
 }
 
 type TabType = 'schedule' | 'orders'
@@ -28,10 +67,37 @@ const MedicationSchedulePage: React.FC = () => {
   const currentUser    = useAppSelector(s => s.auth.currentUser)
   const allPatients    = useAppSelector(s => s.patients.allPatients)
   const prescriptions  = useAppSelector(s => s.prescriptions.items)
+  const allTasks       = useAppSelector(s => s.tasks.allTasks)
   const [tick, setTick] = useState(0)
   const [sortBy, setSortBy] = useState<'time' | 'patient'>('time')
   const [tab, setTab] = useState<TabType>('schedule')
   const [expandedRx, setExpandedRx] = useState<string | null>(null)
+  // 투약 완료 체크 상태: "patientId:약물명" 형태의 키로 관리
+  const [checkedMeds, setCheckedMeds] = useState<Set<string>>(new Set())
+
+  // ── 투약 체크 핸들러 ────────────────────────────────────────────────────────
+  const handleMedCheck = (patientId: string, medName: string) => {
+    const key = `${patientId}:${medName}`
+    setCheckedMeds(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) {
+        next.delete(key)
+      } else {
+        next.add(key)
+        // tasksSlice에서 해당 환자의 category === 'Medication' && 약물명 일치 Pending 태스크 toggle
+        const matchingTask = allTasks.find(
+          t => t.patientId === patientId &&
+               t.category === 'Medication' &&
+               t.status === 'Pending' &&
+               t.taskName.includes(medName)
+        )
+        if (matchingTask) {
+          dispatch(toggleTask(matchingTask.taskId))
+        }
+      }
+      return next
+    })
+  }
 
   useEffect(() => {
     if (allPatients.length === 0) {
@@ -168,7 +234,7 @@ const MedicationSchedulePage: React.FC = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse' }} key={tick}>
               <thead>
                 <tr style={{ background: 'var(--color-bg)' }}>
-                  {['환자', '약물명', '용량 / 빈도', '투여 경로', '다음 투여까지'].map(h => (
+                  {['', '환자', '약물명', '용량 / 빈도', '투여 경로', '다음 투여까지'].map(h => (
                     <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: 700, color: 'var(--color-muted)', textTransform: 'uppercase', letterSpacing: '0.4px', borderBottom: '2px solid var(--color-border)' }}>{h}</th>
                   ))}
                 </tr>
@@ -176,10 +242,27 @@ const MedicationSchedulePage: React.FC = () => {
               <tbody>
                 {sorted.map(({ patient, med, countdown, minutesLeft }, i) => {
                   const rs = ROUTE_STYLE[med.route] ?? ROUTE_STYLE.Other
-                  const isUrgent = minutesLeft === 0
-                  const isSoon   = minutesLeft === 10
+                  const isUrgent  = minutesLeft === 0
+                  const isSoon    = minutesLeft === 10
+                  const checkKey  = `${patient.id}:${med.name}`
+                  const isChecked = checkedMeds.has(checkKey)
                   return (
-                    <tr key={`${patient.id}-${i}`} style={{ borderBottom: '1px solid var(--color-border)', background: isUrgent ? 'rgba(192,57,43,0.04)' : isSoon ? 'rgba(212,134,10,0.03)' : 'transparent' }}>
+                    <tr key={`${patient.id}-${i}`} style={{ borderBottom: '1px solid var(--color-border)', background: isChecked ? 'rgba(46,125,94,0.04)' : isUrgent ? 'rgba(192,57,43,0.04)' : isSoon ? 'rgba(212,134,10,0.03)' : 'transparent', opacity: isChecked ? 0.7 : 1, transition: 'all 0.2s' }}>
+                      {/* 체크 버튼 */}
+                      <td style={{ padding: '12px 8px 12px 14px', width: '40px' }}>
+                        <button
+                          onClick={() => handleMedCheck(patient.id, med.name)}
+                          title={isChecked ? '투약 완료 취소' : '투약 완료 체크'}
+                          style={{
+                            width: '26px', height: '26px', borderRadius: '50%', border: `2px solid ${isChecked ? '#2E7D5E' : 'var(--color-border)'}`,
+                            background: isChecked ? '#2E7D5E' : 'transparent', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'all 0.15s', flexShrink: 0,
+                          }}
+                        >
+                          {isChecked && <LuCircleCheck size={14} style={{ color: '#fff' }} />}
+                        </button>
+                      </td>
                       <td style={{ padding: '12px 14px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <LuUser size={13} style={{ color: 'var(--color-muted)', flexShrink: 0 }} />
@@ -189,13 +272,17 @@ const MedicationSchedulePage: React.FC = () => {
                           </div>
                         </div>
                       </td>
-                      <td style={{ padding: '12px 14px', fontSize: '13px', fontWeight: 500, color: 'var(--color-text)' }}>{med.name}</td>
-                      <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--color-muted)' }}>{med.dosage} · {med.frequency}</td>
+                      <td style={{ padding: '12px 14px', fontSize: '13px', fontWeight: 500, color: 'var(--color-text)', textDecoration: isChecked ? 'line-through' : 'none', opacity: isChecked ? 0.6 : 1 }}>{med.name}</td>
+                      <td style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--color-muted)', textDecoration: isChecked ? 'line-through' : 'none', opacity: isChecked ? 0.6 : 1 }}>{med.dosage} · {med.frequency}</td>
                       <td style={{ padding: '12px 14px' }}>
                         <span style={{ padding: '2px 8px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, background: rs.bg, color: rs.color }}>{rs.label}</span>
                       </td>
                       <td style={{ padding: '12px 14px' }}>
-                        {countdown ? (
+                        {isChecked ? (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', fontWeight: 600, color: '#2E7D5E' }}>
+                            <LuCircleCheck size={13} /> 투약 완료
+                          </span>
+                        ) : countdown ? (
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', fontWeight: 600, color: isUrgent ? '#C0392B' : isSoon ? '#D4860A' : 'var(--color-muted)' }}>
                             {isUrgent ? <LuTriangleAlert size={13} /> : <LuClock size={13} />}
                             {countdown}
@@ -208,7 +295,7 @@ const MedicationSchedulePage: React.FC = () => {
                   )
                 })}
                 {sorted.length === 0 && (
-                  <tr><td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: 'var(--color-muted)', fontSize: '14px' }}>
+                  <tr><td colSpan={6} style={{ padding: '40px', textAlign: 'center', color: 'var(--color-muted)', fontSize: '14px' }}>
                     <LuCircleCheck size={28} style={{ margin: '0 auto 8px', color: '#2E7D5E', display: 'block' }} />
                     처방된 약물이 없습니다
                   </td></tr>
@@ -281,6 +368,7 @@ const MedicationSchedulePage: React.FC = () => {
                               ['처방 적응증', rx.indication],
                               ['투약 기간', rx.duration ?? '-'],
                               ['시작일', rx.startDate],
+                              ['다음 투여 예정 시각', calcNextDoseTime(rx) ?? '-'],
                             ].map(([label, value]) => (
                               <div key={label}>
                                 <div style={{ fontSize: '10px', color: 'var(--color-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.3px', marginBottom: '3px' }}>{label}</div>
