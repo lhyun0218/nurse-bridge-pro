@@ -12,6 +12,7 @@ import { addNotification } from '../store/slices/notificationsSlice'
 import broadcast from '../utils/broadcast'
 import { SHIFT_TIMES, isOnTimeDeparture } from '../constants/shiftTimes'
 import { PERSIST_KEY } from '../store'
+import { toLocalDateKey } from '../utils/dateUtils'
 import type { ShiftType } from '../types'
 
 /* ── shift meta ── */
@@ -42,7 +43,7 @@ const AttendancePage: React.FC = () => {
   const dispatch    = useAppDispatch()
   const currentUser = useAppSelector(s => s.auth.currentUser)
   const records     = useAppSelector(s => s.attendance.records)
-  const today       = new Date().toISOString().slice(0, 10)
+  const today       = toLocalDateKey()
   const todayRec    = records.find(r => r.nurseId === currentUser?.id && r.date === today)
 
   /* calendar nav */
@@ -509,7 +510,7 @@ interface CalendarProps {
 
 const AttendanceCalendar: React.FC<CalendarProps> = ({ nurseId, records, year, month, onPrev, onNext }) => {
   const myRecs  = useMemo(() => records.filter(r => r.nurseId === nurseId), [records, nurseId])
-  const today   = new Date().toISOString().slice(0, 10)
+  const today   = toLocalDateKey()
 
   const daysInMonth = new Date(year, month + 1, 0).getDate()
   const startDay    = new Date(year, month, 1).getDay() // 0=Sun

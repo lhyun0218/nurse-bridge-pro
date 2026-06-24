@@ -84,7 +84,8 @@ export const handlers = [
     const body = await request.json() as any
     const nurse = mockNurses.find(n => n.id === body.nurseId)
     if (!nurse) return HttpResponse.json({ success: false, message: '간호사 없음' }, { status: 404 })
-    const today = new Date().toISOString().slice(0, 10)
+    const d = new Date()
+    const today = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
     const records = readAttendanceRecords()
     const rec = records.find((r: any) => r.nurseId === nurse.id && r.date === today)
     if (rec) {

@@ -156,7 +156,8 @@ export const patientMedications: Record<string, Medication[]> = {
 }
 
 // ── 의사 처방 목록 (Doctor's Order) ──────────────────────────────────────────
-const today = new Date().toISOString().slice(0, 10)
+const _d = new Date()
+const today = `${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}-${String(_d.getDate()).padStart(2,'0')}`
 const ts = (hOffset = 0) => Date.now() - hOffset * 3600 * 1000
 
 export const mockPrescriptions: Prescription[] = [

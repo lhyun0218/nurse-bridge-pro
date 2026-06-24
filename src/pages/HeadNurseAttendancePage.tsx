@@ -11,6 +11,7 @@ import { approveCheckout, setLeaveStatus, setRecords } from '../store/slices/att
 import { addNotification } from '../store/slices/notificationsSlice'
 import broadcast from '../utils/broadcast'
 import { PERSIST_KEY } from '../store'
+import { toLocalDateKey } from '../utils/dateUtils'
 
 /* ── types ── */
 interface AttendanceRecord {
@@ -51,7 +52,7 @@ const HeadNurseAttendancePage: React.FC = () => {
   const records  = useAppSelector(s => s.attendance.records)
   const nurses   = useAppSelector(s => s.nurses.allNurses)
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = toLocalDateKey()
 
   /* tab: 'today' | 'all' */
   const [tab, setTab] = useState<'today' | 'all'>('today')
@@ -434,7 +435,7 @@ const MonthlyOverview: React.FC<MonthlyOverviewProps> = ({ records, nurses, year
     })
   }, [records, year, month, daysInMonth])
 
-  const today    = new Date().toISOString().slice(0, 10)
+  const today    = toLocalDateKey()
   const startDay = new Date(year, month, 1).getDay()
 
   return (

@@ -115,7 +115,7 @@ Nurse Bridge Pro 시스템의 전면 연동 개선 작업입니다. scheduleSlic
   - 근무 상세 리스트의 `shiftTime` 변수 하드코딩 → `SHIFT_TIMES` 조회로 교체
   - **Requires:** 1
 
-- [~] 15. 전체 빌드 검증
+- [x] 15. 전체 빌드 검증
   - `npm run build` 실행하여 컴파일 오류 없음 확인
   - Inventory 관련 import 잔재 전체 검색 확인
   - ReassignBanner 관련 import 잔재 전체 검색 확인

@@ -11,6 +11,7 @@ import { setPatients } from '../store/slices/patientsSlice'
 import { getMedicationCountdown } from '../hooks/useMedicationTimer'
 import { verifyPrescription, discontinuePrescription } from '../store/slices/prescriptionsSlice'
 import { toggleTask } from '../store/slices/tasksSlice'
+import { toLocalDateKey } from '../utils/dateUtils'
 import type { Prescription } from '../types'
 
 // ── 다음 투여 예정 시각 계산 ──────────────────────────────────────────────────
@@ -110,7 +111,7 @@ const MedicationSchedulePage: React.FC = () => {
     return () => clearInterval(id)
   }, [])
 
-  const todayKey = new Date().toISOString().slice(0, 10)
+  const todayKey = toLocalDateKey()
   const assignsToday = useAppSelector(s => s.assignments.byDate[todayKey] ?? {})
   const myPatients = allPatients.filter(p =>
     Object.values(assignsToday[p.id] ?? {}).includes(currentUser?.id ?? '')

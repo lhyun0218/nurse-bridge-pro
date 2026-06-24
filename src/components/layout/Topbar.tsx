@@ -4,6 +4,7 @@ import { LuMenu, LuSun, LuMoon, LuClock, LuBellDot } from 'react-icons/lu'
 import { useAppSelector } from '../../hooks/useAppSelector'
 import { useTheme } from '../../hooks/useTheme'
 import { minutesUntilShiftEnd } from '../../constants/shiftTimes'
+import { toLocalDateKey } from '../../utils/dateUtils'
 import type { ShiftType } from '../../types'
 
 interface TopbarProps {
@@ -23,7 +24,7 @@ export default function Topbar({ pageTitle, onMenuToggle, onNotificationClick }:
   const hasAlerts        = vitalAlerts.length > 0 || medicationAlerts.length > 0 || unreadCount > 0
 
   // 오늘 출근/퇴근 기록 조회
-  const todayStr = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+  const todayStr = toLocalDateKey()
   const attendanceRecords = useAppSelector(s => s.attendance.records)
   const todayRecord = currentUser
     ? attendanceRecords.find(r => r.nurseId === currentUser.id && r.date === todayStr)

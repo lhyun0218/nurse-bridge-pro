@@ -8,6 +8,7 @@ import { setAssignments } from '../store/slices/assignmentsSlice'
 import { useToast } from '../hooks/useToast'
 import { Button, Toast } from '../components/common'
 import { autoAssignPatients } from '../utils/autoAssignPatients'
+import { toLocalDateKey } from '../utils/dateUtils'
 import type { Patient, Severity } from '../types'
 
 // ── 진단명별 Todo 템플릿 미리보기 ─────────────────
@@ -230,7 +231,7 @@ const PatientFormPage: React.FC = () => {
       dispatch(addPatient(patient))
 
       // 오늘 날짜 배정 생성 — 신규 환자를 포함한 전체 환자 목록 대상
-      const todayKey = new Date().toISOString().slice(0, 10)
+      const todayKey = toLocalDateKey()
       const now = new Date()
       const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
       const scheduleRows = scheduleSaved[monthKey] ?? []

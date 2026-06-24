@@ -17,6 +17,7 @@ import ShiftReportModal from '../components/report/ShiftReportModal'
 import { requestCheckout } from '../store/slices/attendanceSlice'
 import broadcast from '../utils/broadcast'
 import { addNotification } from '../store/slices/notificationsSlice'
+import { toLocalDateKey } from '../utils/dateUtils'
 
 // ─────────────────────────────────────────
 // 일반 간호사 대시보드
@@ -74,7 +75,7 @@ const NurseDashboard: React.FC = () => {
         }))
 
         // 로컬 출석 상태에 퇴근 요청 표시
-        const today = new Date().toISOString().slice(0,10)
+        const today = toLocalDateKey()
         dispatch(requestCheckout({ nurseId: currentUser.id, date: today }))
         console.log('[DEBUG] 퇴근요청 디스패치됨', { nurseId: currentUser.id, date: today })
 
