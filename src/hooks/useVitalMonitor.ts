@@ -210,7 +210,7 @@ export function useVitalMonitor(patientIds: string[]) {
           dispatch(upsertVitalAlert(alert))
         }
       }
-    }, 20000) // 위급 환자 20초마다 라이브 업데이트
+    }, 20000) // 위급 환자 20초마다 활력징후 업데이트
 
     return () => clearInterval(interval)
   // eslint-disable-next-line react-hooks/exhaustive-deps

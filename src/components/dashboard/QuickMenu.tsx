@@ -1,7 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  LuPackage, LuPill, LuUsers, LuClipboardCheck, LuDoorOpen,
+  LuPill, LuUsers, LuClipboardCheck, LuDoorOpen,
 } from 'react-icons/lu'
 
 interface QuickMenuProps {
@@ -26,12 +26,6 @@ const QuickMenu: React.FC<QuickMenuProps> = ({ allTasksDone, onCheckout }) => {
   const iconStyle = { width: '20px', height: '20px' }
 
   const items: MenuItem[] = [
-    {
-      icon: <LuPackage style={iconStyle} />,
-      label: '물품 재고', sub: '재고 현황 확인',
-      iconBg: '#FEF3E2', iconColor: '#D4860A',
-      path: '/inventory',
-    },
     {
       icon: <LuPill style={iconStyle} />,
       label: '투약 스케줄', sub: '투약 일정 확인',

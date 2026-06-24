@@ -171,7 +171,7 @@ const VitalSignsGrid: React.FC<VitalSignsGridProps> = ({ vitalSigns: v, isRealti
           <span style={{ fontSize: '11px', fontWeight: 700, color: '#2E7D5E', letterSpacing: '0.4px' }}>
             실시간 모니터링
           </span>
-          <span style={{ fontSize: '10px', color: 'var(--color-muted)' }}>· 5초마다 업데이트</span>
+          <span style={{ fontSize: '10px', color: 'var(--color-muted)' }}>· 20초마다 업데이트</span>
         </div>
       )}
 

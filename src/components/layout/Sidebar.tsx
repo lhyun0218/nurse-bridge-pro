@@ -9,6 +9,7 @@ import {
 import { useAppSelector } from '../../hooks/useAppSelector'
 import { useAppDispatch } from '../../hooks/useAppDispatch'
 import { logout } from '../../store/slices/authSlice'
+import { SHIFT_TIMES } from '../../constants/shiftTimes'
 
 interface SidebarProps {
   isOpen: boolean
@@ -145,10 +146,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const avatarBg    = isHeadNurse ? '#D4860A' : '#2C6E8A'
   const roleBadgeBg = isHeadNurse ? '#D4860A' : '#2E7D5E'
 
+  const shiftMeta = currentUser?.shiftType
+    ? SHIFT_TIMES[currentUser.shiftType]
+    : SHIFT_TIMES.Day
   const shiftLabel =
-    currentUser?.shiftType === 'Day'     ? `Day · 07:30~16:00`
-    : currentUser?.shiftType === 'Evening' ? `Evening · 15:30~00:00`
-    : `Night · 23:30~08:00`
+    currentUser?.shiftType === 'Day'     ? `Day · ${shiftMeta.workStart}~${shiftMeta.workEnd}`
+    : currentUser?.shiftType === 'Evening' ? `Evening · ${shiftMeta.workStart}~${shiftMeta.workEnd}`
+    : `Night · ${shiftMeta.workStart}~${shiftMeta.workEnd}`
 
   const linkBase: React.CSSProperties = {
     display: 'flex', alignItems: 'center', gap: '10px',

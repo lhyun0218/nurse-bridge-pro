@@ -11,12 +11,13 @@ import ConfirmShiftModal from '../components/common/ConfirmShiftModal'
 import { loginSuccess, updateShift } from '../store/slices/authSlice'
 import { autoAssignPatients } from '../utils/autoAssignPatients'
 import { setPatients } from '../store/slices/patientsSlice'
+import { SHIFT_TIMES } from '../constants/shiftTimes'
 import type { ShiftType } from '../types'
 
 const SHIFT_OPTIONS: { value: ShiftType; label: string; time: string; color: string }[] = [
-  { value: 'Day',     label: 'Day',     time: '06:00 – 15:00', color: '#2C6E8A' },
-  { value: 'Evening', label: 'Evening', time: '15:00 – 23:00', color: '#D4860A' },
-  { value: 'Night',   label: 'Night',   time: '23:00 – 06:00', color: '#3F51B5' },
+  { value: 'Day',     label: 'Day',     time: `${SHIFT_TIMES.Day.workStart} – ${SHIFT_TIMES.Day.workEnd}`,         color: '#2C6E8A' },
+  { value: 'Evening', label: 'Evening', time: `${SHIFT_TIMES.Evening.workStart} – ${SHIFT_TIMES.Evening.workEnd}`, color: '#D4860A' },
+  { value: 'Night',   label: 'Night',   time: `${SHIFT_TIMES.Night.workStart} – ${SHIFT_TIMES.Night.workEnd}`,     color: '#3F51B5' },
 ]
 
 const DEMO_ACCOUNTS = [

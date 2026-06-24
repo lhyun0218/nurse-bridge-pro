@@ -110,7 +110,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, tasks }) => {
       {/* 상단: 병실번호 + 중증도 배지 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
         <div style={{ fontSize: '11px', color: 'var(--color-muted)', fontWeight: 500 }}>
-          병실 {patient.roomNumber} · {patient.id}
+          병실 {patient.roomNumber} · {patient.medicalRecordNo}
         </div>
         <SeverityBadge severity={patient.severity} />
       </div>
