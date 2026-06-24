@@ -19,6 +19,7 @@ import coverageReducer from './slices/coverageSlice'
 import prescriptionsReducer from './slices/prescriptionsSlice'
 
 const PERSIST_KEY = 'nb:persist:v1'
+export { PERSIST_KEY }
 
 function loadPersistedState() {
   try {

@@ -11,6 +11,7 @@ import { checkIn, checkOut, setRecords, startBreak, endBreak, requestEarlyLeave 
 import { addNotification } from '../store/slices/notificationsSlice'
 import broadcast from '../utils/broadcast'
 import { SHIFT_TIMES, isOnTimeDeparture } from '../constants/shiftTimes'
+import { PERSIST_KEY } from '../store'
 import type { ShiftType } from '../types'
 
 /* ── shift meta ── */
@@ -27,7 +28,7 @@ function fmtTime(ts?: number) {
 
 function hydrateFromStorage(dispatch: ReturnType<typeof useAppDispatch>) {
   try {
-    const raw = localStorage.getItem('nb:persist:v1')
+    const raw = localStorage.getItem(PERSIST_KEY)
     if (!raw) return
     const p = JSON.parse(raw)
     if (p?.attendance?.records) dispatch(setRecords(p.attendance.records))

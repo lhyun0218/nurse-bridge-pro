@@ -1,6 +1,7 @@
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { LuSun, LuSunset, LuMoon, LuCircleAlert } from 'react-icons/lu'
+import { SHIFT_TIMES } from '../../constants/shiftTimes'
 
 type ShiftType = 'Day' | 'Evening' | 'Night'
 
@@ -16,9 +17,9 @@ type Props = {
 }
 
 const SHIFT_META: Record<ShiftType, { label: string; time: string; icon: React.ElementType; color: string; bg: string }> = {
-  Day:     { label: '데이',   time: '06:00 – 15:00', icon: LuSun,     color: '#2C6E8A', bg: '#EAF4F9' },
-  Evening: { label: '이브닝', time: '15:00 – 23:00', icon: LuSunset,  color: '#D4860A', bg: '#FEF3E2' },
-  Night:   { label: '나이트', time: '23:00 – 06:00', icon: LuMoon,    color: '#3F51B5', bg: '#EEF0FB' },
+  Day:     { label: '데이',   time: `${SHIFT_TIMES.Day.workStart} – ${SHIFT_TIMES.Day.workEnd}`,         icon: LuSun,     color: '#2C6E8A', bg: '#EAF4F9' },
+  Evening: { label: '이브닝', time: `${SHIFT_TIMES.Evening.workStart} – ${SHIFT_TIMES.Evening.workEnd}`, icon: LuSunset,  color: '#D4860A', bg: '#FEF3E2' },
+  Night:   { label: '나이트', time: `${SHIFT_TIMES.Night.workStart} – ${SHIFT_TIMES.Night.workEnd}`,     icon: LuMoon,    color: '#3F51B5', bg: '#EEF0FB' },
 }
 
 const ConfirmShiftModal: React.FC<Props> = ({

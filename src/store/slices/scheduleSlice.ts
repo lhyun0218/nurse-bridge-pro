@@ -2,12 +2,15 @@ import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 import type { NurseScheduleRow } from '../../types'
 
+/** localStorage 키 — 단일 소스 of truth */
+export const SCHEDULE_STORAGE_KEY = 'savedSchedule'
+
 interface ScheduleState {
   saved: Record<string, NurseScheduleRow[]>
 }
 
 const persisted = typeof localStorage !== 'undefined'
-  ? JSON.parse(localStorage.getItem('savedSchedule') || '{}') as Record<string, NurseScheduleRow[]>
+  ? JSON.parse(localStorage.getItem(SCHEDULE_STORAGE_KEY) || '{}') as Record<string, NurseScheduleRow[]>
   : {}
 
 const initialState: ScheduleState = {
@@ -16,7 +19,7 @@ const initialState: ScheduleState = {
 
 const persistSchedules = (state: ScheduleState) => {
   if (typeof localStorage !== 'undefined') {
-    localStorage.setItem('savedSchedule', JSON.stringify(state.saved))
+    localStorage.setItem(SCHEDULE_STORAGE_KEY, JSON.stringify(state.saved))
   }
 }
 

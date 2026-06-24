@@ -10,6 +10,7 @@ import { useAppSelector } from '../hooks/useAppSelector'
 import { approveCheckout, setLeaveStatus, setRecords } from '../store/slices/attendanceSlice'
 import { addNotification } from '../store/slices/notificationsSlice'
 import broadcast from '../utils/broadcast'
+import { PERSIST_KEY } from '../store'
 
 /* ── types ── */
 interface AttendanceRecord {
@@ -35,7 +36,7 @@ function fmtTime(ts?: number) {
 
 function hydrateFromStorage(dispatch: ReturnType<typeof useAppDispatch>) {
   try {
-    const raw = localStorage.getItem('nb:persist:v1')
+    const raw = localStorage.getItem(PERSIST_KEY)
     if (!raw) return
     const p = JSON.parse(raw)
     if (p?.attendance?.records) dispatch(setRecords(p.attendance.records))

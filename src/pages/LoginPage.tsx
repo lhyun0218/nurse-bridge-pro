@@ -12,6 +12,7 @@ import { loginSuccess, updateShift } from '../store/slices/authSlice'
 import { autoAssignPatients } from '../utils/autoAssignPatients'
 import { setPatients } from '../store/slices/patientsSlice'
 import { SHIFT_TIMES } from '../constants/shiftTimes'
+import { SCHEDULE_STORAGE_KEY } from '../store/slices/scheduleSlice'
 import type { ShiftType } from '../types'
 
 const SHIFT_OPTIONS: { value: ShiftType; label: string; time: string; color: string }[] = [
@@ -48,7 +49,7 @@ export default function LoginPage() {
         const [ns, pts] = await Promise.all([nRes.json(), pRes.json()])
         dispatch(setNurses(ns))
         const saved = typeof localStorage !== 'undefined'
-          ? JSON.parse(localStorage.getItem('savedSchedule') || '{}')
+          ? JSON.parse(localStorage.getItem(SCHEDULE_STORAGE_KEY) || '{}')
           : {}
         const now = new Date()
         const key = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
